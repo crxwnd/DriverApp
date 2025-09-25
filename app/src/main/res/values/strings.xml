@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Driver App</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Driver App</string>
+    <string name="login_subtitle">Inicia sesión para continuar</string>
+    <string name="hint_username">Ingrese usuario o correo</string>
+    <string name="hint_password">Ingrese contraseña</string>
+    <string name="btn_login">Iniciar sesión</string>
+    <string name="error_empty_field">Este campo es requerido</string>
+    <string name="error_invalid_username">Ingrese un usuario o correo válido</string>
+    <string name="error_short_password">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="error_invalid_credentials">Usuario o contraseña incorrectos</string>
+    <string name="error_connection">Error de conexión. Intente nuevamente</string>
+
+    <!-- Home Screen -->
+    <string name="welcome_message">Bienvenido, %s</string>
+    <string name="home_logged_in">Has iniciado sesión correctamente</string>
+    <string name="home_coming_soon">Próximamente:\n• Ver rutas asignadas\n• Iniciar navegación\n• Cronómetro de viaje</string>
+    <string name="btn_logout">Cerrar sesión</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_logout_title">Cerrar sesión</string>
+    <string name="dialog_logout_message">¿Está seguro que desea cerrar sesión?</string>
+    <string name="dialog_cancel">Cancelar</string>
+    <string name="dialog_confirm">Cerrar sesión</string>
+
+    <!-- General -->
+    <string name="loading">Cargando…</string>
+    <string name="error_generic">Ha ocurrido un error</string>
+</resources>
