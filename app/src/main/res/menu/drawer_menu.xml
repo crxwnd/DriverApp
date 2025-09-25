@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+
+        <!-- Ayuda -->
+        <item
+            android:id="@+id/nav_help"
+            android:icon="@drawable/ic_help"
+            android:title="Ayuda" />
+
+        <!-- Guía -->
+        <item
+            android:id="@+id/nav_guide"
+            android:icon="@drawable/ic_guide"
+            android:title="Guía" />
+
+        <!-- Divider visual (sin funcionalidad) -->
+        <item
+            android:id="@+id/nav_divider"
+            android:title=""
+            android:enabled="false" />
+
+        <!-- Cerrar sesión -->
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_logout"
+            android:title="Cerrar sesión" />
+
+    </group>
+
+</menu>

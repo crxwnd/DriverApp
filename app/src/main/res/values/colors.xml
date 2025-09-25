@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Colores principales -->
-    <color name="primary">#1976D2</color>
-    <color name="primary_dark">#1565C0</color>
-    <color name="primary_light">#42A5F5</color>
-    <color name="accent">#FF6E40</color>
+    <!-- Colores principales de la empresa -->
+    <color name="primary">#254D6E</color>
+    <color name="primary_dark">#1A3A52</color>
+    <color name="primary_light">#3A6489</color>
+    <color name="accent">#254D6E</color>
 
     <!-- Colores de fondo -->
-    <color name="background">#FAFAFA</color>
-    <color name="surface">#FFFFFF</color>
+    <color name="background">#EDECE4</color>
+    <color name="surface">#E0E5E5</color>
+    <color name="surface_variant">#EDECE4</color>
 
     <!-- Colores de texto -->
     <color name="text_primary">#212121</color>

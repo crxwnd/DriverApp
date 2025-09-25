@@ -28,4 +28,15 @@
     <!-- General -->
     <string name="loading">Cargando…</string>
     <string name="error_generic">Ha ocurrido un error</string>
+
+    <!-- Navigation Drawer -->
+    <string name="navigation_drawer_open">Abrir menú de navegación</string>
+    <string name="navigation_drawer_close">Cerrar menú de navegación</string>
+    <string name="nav_help">Ayuda</string>
+    <string name="nav_guide">Guía</string>
+    <string name="nav_logout">Cerrar sesión</string>
+
+    <!-- Map Screen -->
+    <string name="map_loading">Cargando mapa…</string>
+    <string name="location_permission_needed">Se necesita permiso de ubicación para mostrar tu posición</string>
 </resources>

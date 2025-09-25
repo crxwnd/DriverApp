@@ -170,8 +170,8 @@ class LoginActivity : AppCompatActivity() {
         // Mostrar mensaje de éxito
         Toast.makeText(this, "Bienvenido $username", Toast.LENGTH_SHORT).show()
 
-        // Navegar a HomeActivity
-        val intent = Intent(this, HomeActivity::class.java).apply {
+        // Navegar a MainActivity
+        val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)
