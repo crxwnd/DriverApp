@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="220dp"
+    android:background="@drawable/drawer_header_background"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+
+    <!-- Logo de la empresa -->
+    <ImageView
+        android:id="@+id/imgCompanyLogo"
+        android:layout_width="60dp"
+        android:layout_height="30dp"
+        android:src="@drawable/ic_company_logo"
+        android:contentDescription="Logo de la empresa"
+        android:layout_marginBottom="16dp"
+        app:tint="@color/white" />
+
+    <!-- Foto del driver -->
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/imgDriverProfile"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_default_profile"
+        app:civ_border_width="2dp"
+        app:civ_border_color="@color/white" />
+
+    <!-- Nombre del driver -->
+    <TextView
+        android:id="@+id/tvDriverName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nombre del Driver"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="12dp" />
+
+    <!-- Email/Usuario del driver -->
+    <TextView
+        android:id="@+id/tvDriverEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="driver@empresa.com"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
+        android:alpha="0.9" />
+
+</LinearLayout>
