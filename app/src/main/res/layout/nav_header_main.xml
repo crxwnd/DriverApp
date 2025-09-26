@@ -9,14 +9,15 @@
     android:padding="16dp"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-    <!-- Logo de la empresa -->
+    <!-- Logo de la empresa (reemplázalo con tu monólogo.svg) -->
     <ImageView
         android:id="@+id/imgCompanyLogo"
-        android:layout_width="60dp"
+        android:layout_width="80dp"
         android:layout_height="30dp"
-        android:src="@drawable/ic_company_logo"
+        android:src="@drawable/ic_company_logo_real"
         android:contentDescription="Logo de la empresa"
         android:layout_marginBottom="16dp"
+        android:scaleType="fitCenter"
         app:tint="@color/white" />
 
     <!-- Foto del driver -->
@@ -39,7 +40,9 @@
         android:textSize="18sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginTop="12dp" />
+        android:layout_marginTop="12dp"
+        android:maxLines="1"
+        android:ellipsize="end" />
 
     <!-- Email/Usuario del driver -->
     <TextView
@@ -51,6 +54,8 @@
         android:textSize="14sp"
         android:gravity="center"
         android:layout_marginTop="4dp"
-        android:alpha="0.9" />
+        android:alpha="0.9"
+        android:maxLines="1"
+        android:ellipsize="end" />
 
 </LinearLayout>

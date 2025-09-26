@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="40dp"
+    android:viewportWidth="120"
+    android:viewportHeight="40">
+    <!-- Este será reemplazado por tu monólogo.svg -->
+    <!-- Por ahora es un placeholder -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8,8h104c4.4,0 8,3.6 8,8v8c0,4.4 -3.6,8 -8,8H8c-4.4,0 -8,-3.6 -8,-8v-8C0,11.6 3.6,8 8,8z"/>
+    <path
+        android:fillColor="#254D6E"
+        android:pathData="M12,14h20v12h-20z"/>
+    <path
+        android:fillColor="#254D6E"
+        android:pathData="M36,18h70v4h-70z"/>
+    <path
+        android:fillColor="#254D6E"
+        android:pathData="M36,24h50v2h-50z"/>
+</vector>
