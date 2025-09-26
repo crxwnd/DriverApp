@@ -47,6 +47,21 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
+    // Navigation Drawer
+    implementation("androidx.drawerlayout:drawerlayout:1.2.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
+
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Imagen circular para perfil
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+
+    // Para cargar imágenes de perfil (opcional, por si las cargas de URL)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
     // Para manejo de ViewModels
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.activity:activity-ktx:1.8.2")
@@ -62,19 +77,4 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-
-    implementation(platform("androidx.compose:compose-bom:2024.09.01")) // BOM para manejar versiones
-
-    // Material 3
-    implementation("androidx.compose.material3:material3")
-
-    // Foundation (para isSystemInDarkTheme, LocalContext, etc.)
-    implementation("androidx.compose.foundation:foundation")
-
-    // UI (componentes básicos de Compose)
-    implementation("androidx.compose.ui:ui")
-
-    // Herramientas de vista previa (opcional, pero recomendable)
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.ui:ui-tooling-preview")
 }
