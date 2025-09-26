@@ -6,9 +6,10 @@
     <!-- Permisos necesarios -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Permisos para el futuro mapa y GPS -->
+    <!-- Permisos para el mapa y GPS -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -22,6 +23,11 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
+        <!-- API Key de Google Maps (IMPORTANTE: Debes obtener tu propia API Key) -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBzxOEzJVTogOZ7td9YHTgI8TXj-BVelpU" />
+
         <!-- Login Activity - Punto de entrada principal -->
         <activity
             android:name=".LoginActivity"
@@ -34,7 +40,13 @@
             </intent-filter>
         </activity>
 
-        <!-- Home Activity -->
+        <!-- Main Activity con Mapa y Navigation Drawer -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DriverApp.NoActionBar" />
+
+        <!-- Home Activity (Ya no se usa, pero la dejamos por si acaso) -->
         <activity
             android:name=".HomeActivity"
             android:exported="false"
