@@ -1,0 +1,16 @@
+<!-- ic_company_logo.xml (placeholder - reemplaza con tu logo) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="40dp"
+    android:viewportWidth="120"
+    android:viewportHeight="40">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,10h100v20h-100z"/>
+    <path
+        android:fillColor="#254D6E"
+        android:pathData="M15,15h30v10h-30z"/>
+    <path
+        android:fillColor="#254D6E"
+        android:pathData="M50,18h55v4h-55z"/>
+</vector>

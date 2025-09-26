@@ -1,0 +1,9 @@
+<!-- drawer_header_background.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="135"
+        android:startColor="#254D6E"
+        android:centerColor="#3A6489"
+        android:endColor="#254D6E"
+        android:type="linear" />
+</shape>
