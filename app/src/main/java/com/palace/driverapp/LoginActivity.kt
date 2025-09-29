@@ -218,12 +218,6 @@ class LoginActivity : AppCompatActivity() {
     private fun checkExistingSession() {
         val sharedPref = getSharedPreferences("DriverAppPrefs", MODE_PRIVATE)
         val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-
-        if (isLoggedIn) {
-            // Si ya hay sesión, ir directamente a Home
-            startActivity(Intent(this, HomeActivity::class.java))
-            finish()
-        }
     }
 
     override fun onDestroy() {
