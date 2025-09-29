@@ -46,12 +46,6 @@
             android:exported="false"
             android:theme="@style/Theme.DriverApp.NoActionBar" />
 
-        <!-- Home Activity (Ya no se usa, pero la dejamos por si acaso) -->
-        <activity
-            android:name=".HomeActivity"
-            android:exported="false"
-            android:theme="@style/Theme.DriverApp.NoActionBar" />
-
     </application>
 
 </manifest>
