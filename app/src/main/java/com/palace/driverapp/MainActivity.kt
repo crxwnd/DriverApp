@@ -27,6 +27,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
 import com.google.android.material.button.MaterialButton
+import android.view.animation.BounceInterpolator
+import android.view.animation.OvershootInterpolator
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
@@ -91,6 +93,36 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         // Cambiar color del icono hamburguesa
         toggle.drawerArrowDrawable.color = resources.getColor(R.color.white, theme)
 
+        // Listener personalizado para animaciones del drawer
+        drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+                // Animación suave del contenido principal
+                val moveFactor = navigationView.width * slideOffset
+                val contentView = findViewById<View>(R.id.map)
+                contentView?.translationX = moveFactor * 0.5f
+                contentView?.scaleX = 1 - (slideOffset * 0.1f)
+                contentView?.scaleY = 1 - (slideOffset * 0.1f)
+            }
+
+            override fun onDrawerOpened(drawerView: View) {
+                // Animar elementos del drawer cuando se abre
+                animateDrawerContent()
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                // Restaurar escala del contenido
+                val contentView = findViewById<View>(R.id.map)
+                contentView?.animate()
+                    ?.scaleX(1f)
+                    ?.scaleY(1f)
+                    ?.translationX(0f)
+                    ?.setDuration(200)
+                    ?.start()
+            }
+
+            override fun onDrawerStateChanged(newState: Int) {}
+        })
+
         // Configurar el listener para los items del menú
         navigationView.setNavigationItemSelectedListener(this)
 
@@ -99,20 +131,110 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         tvDriverName = headerView.findViewById(R.id.tvDriverName)
         tvDriverEmail = headerView.findViewById(R.id.tvDriverEmail)
         imgDriverProfile = headerView.findViewById(R.id.imgDriverProfile)
+
+        // Animar logo de la empresa
+        val imgCompanyLogo = headerView.findViewById<ImageView>(R.id.imgCompanyLogo)
+        animateCompanyLogo(imgCompanyLogo)
+    }
+
+    private fun animateCompanyLogo(logo: ImageView) {
+        logo.post {
+            // Rotación continua sutil
+            val rotation = ObjectAnimator.ofFloat(logo, "rotation", 0f, 360f)
+            rotation.duration = 20000
+            rotation.repeatCount = ObjectAnimator.INFINITE
+            rotation.interpolator = android.view.animation.LinearInterpolator()
+            rotation.start()
+
+            // Escala sutil (breathing effect)
+            val scaleX = ObjectAnimator.ofFloat(logo, "scaleX", 1f, 1.1f, 1f)
+            val scaleY = ObjectAnimator.ofFloat(logo, "scaleY", 1f, 1.1f, 1f)
+            scaleX.duration = 2000
+            scaleY.duration = 2000
+            scaleX.repeatCount = ObjectAnimator.INFINITE
+            scaleY.repeatCount = ObjectAnimator.INFINITE
+            scaleX.start()
+            scaleY.start()
+        }
+    }
+
+    private fun animateDrawerContent() {
+        // Animar foto de perfil
+        imgDriverProfile.scaleX = 0.8f
+        imgDriverProfile.scaleY = 0.8f
+        imgDriverProfile.alpha = 0.5f
+
+        imgDriverProfile.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .alpha(1f)
+            .setDuration(400)
+            .setInterpolator(OvershootInterpolator())
+            .start()
+
+        // Animar nombre con bounce
+        tvDriverName.translationY = -20f
+        tvDriverName.alpha = 0f
+
+        tvDriverName.animate()
+            .translationY(0f)
+            .alpha(1f)
+            .setStartDelay(100)
+            .setDuration(500)
+            .setInterpolator(BounceInterpolator())
+            .start()
+
+        // Animar email
+        tvDriverEmail.translationY = -20f
+        tvDriverEmail.alpha = 0f
+
+        tvDriverEmail.animate()
+            .translationY(0f)
+            .alpha(1f)
+            .setStartDelay(200)
+            .setDuration(500)
+            .setInterpolator(BounceInterpolator())
+            .start()
+
+        // Animar items del menú secuencialmente
+        animateMenuItems()
+    }
+
+    private fun animateMenuItems() {
+        val menu = navigationView.menu
+        var delay = 0L
+
+        for (i in 0 until menu.size()) {
+            val menuItem = menu.getItem(i)
+            val view = navigationView.findViewById<View>(menuItem.itemId)
+
+            view?.let {
+                it.translationX = -100f
+                it.alpha = 0f
+
+                it.animate()
+                    .translationX(0f)
+                    .alpha(1f)
+                    .setStartDelay(delay)
+                    .setDuration(300)
+                    .setInterpolator(OvershootInterpolator())
+                    .start()
+
+                delay += 50
+            }
+        }
     }
 
     private fun loadUserDataInDrawer() {
-        // Cargar datos del usuario desde SharedPreferences
         val sharedPref = getSharedPreferences("DriverAppPrefs", MODE_PRIVATE)
         val username = sharedPref.getString("username", "Usuario") ?: "Usuario"
 
-        // Por ahora usaremos datos de prueba, después los obtendrás del servidor
-        tvDriverName.text = "Juan Pérez"  // Nombre completo del driver
-        tvDriverEmail.text = username  // Usuario o email
+        // Por ahora datos de prueba
+        tvDriverName.text = "Juan Pérez"
+        tvDriverEmail.text = username
 
-        // La foto de perfil por defecto está en el drawable
-        // Cuando tengas URL de fotos, puedes usar Glide:
-        // Glide.with(this).load(photoUrl).into(imgDriverProfile)
+        // Efecto de typing animation para el nombre (opcional)
+        //animateTextTyping(tvDriverName, "Juan Pérez")
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
