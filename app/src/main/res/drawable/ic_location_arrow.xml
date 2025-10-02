@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Sombra (flecha más grande en transparente oscuro) -->
+    <path
+        android:fillColor="#40000000"
+        android:pathData="M24,4 L34,40 L24,32 L14,40 Z" />
+
+    <!-- Flecha principal -->
+    <path
+        android:fillColor="#254D6E"
+        android:pathData="M24,6 L32,38 L24,30 L16,38 Z" />
+
+    <!-- Detalle central (una línea blanca tipo “navegador”) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,10 L28,36 L24,30 L20,36 Z" />
+
+</vector>
