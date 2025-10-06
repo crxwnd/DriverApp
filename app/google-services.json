@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1058151037421",
+    "project_id": "driverapp-777",
+    "storage_bucket": "driverapp-777.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058151037421:android:28348955f7b11b5032cfe4",
+        "android_client_info": {
+          "package_name": "com.palace.driverapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCELCU_ZaXOCbHYnkx3ZjcgBnRmi-2pgKM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
