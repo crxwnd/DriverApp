@@ -2,15 +2,14 @@ package com.palace.driverapp
 
 import android.location.Location
 import com.google.firebase.database.*
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 
 /**
  * Gestor centralizado para manejar ubicaciones de drivers en Firebase
+ * Usando APIs modernas sin sufijo -ktx
  */
 class DriverLocationManager {
 
-    private val database: DatabaseReference = Firebase.database.reference
+    private val database: DatabaseReference = FirebaseDatabase.getInstance().reference
     private val driversRef: DatabaseReference = database.child("drivers")
 
     // Listeners para detectar cambios
