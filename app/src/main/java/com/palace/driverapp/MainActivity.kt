@@ -279,14 +279,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                 isTiltGesturesEnabled = true
                 isRotateGesturesEnabled = true
             }
-
-            // Listener cuando el usuario mueve el mapa manualmente
-            mMap.setOnCameraMoveStartedListener { reason ->
-                if (reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {
-                    isFollowingUser = false
-                }
-            }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -418,16 +410,28 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             accuracyCircle?.radius = location.accuracy.toDouble()
         }
 
-        // Mover cámara solo si es la primera actualización o si está siguiendo al usuario
-        if (isFirstLocationUpdate || isFollowingUser) {
-            val cameraUpdate = if (isFirstLocationUpdate) {
-                CameraUpdateFactory.newLatLngZoom(latLng, 18f)
-            } else {
-                CameraUpdateFactory.newLatLng(latLng)
-            }
+        // ✅ CAMBIO PRINCIPAL: La cámara SIEMPRE sigue al usuario
+        if (isFirstLocationUpdate) {
+            // Primera vez: zoom y centrado
+            val cameraPosition = CameraPosition.Builder()
+                .target(latLng)
+                .zoom(18f)
+                .bearing(location.bearing) // Rotar mapa según dirección
+                .tilt(45f) // Vista en perspectiva (3D)
+                .build()
 
-            mMap.animateCamera(cameraUpdate, 1000, null)
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1500, null)
             isFirstLocationUpdate = false
+        } else {
+            // Actualizaciones siguientes: seguir suavemente con rotación
+            val cameraPosition = CameraPosition.Builder()
+                .target(latLng)
+                .zoom(mMap.cameraPosition.zoom) // Mantener zoom actual
+                .bearing(location.bearing) // Rotar mapa según dirección
+                .tilt(45f) // Vista en perspectiva
+                .build()
+
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null)
         }
     }
 
