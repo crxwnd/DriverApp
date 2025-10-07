@@ -19,7 +19,10 @@ data class LoginResponse(
 data class DriverInfo(
     val id: String,
     val code: String,
-    val status: String      // "ACTIVE", "INACTIVE", "SUSPENDED"
+    val status: String,      // "ACTIVE", "INACTIVE", "SUSPENDED"
+    val firstName: String?,  // NUEVO
+    val lastNameP: String?,  // NUEVO
+    val lastNameM: String?   // NUEVO
 )
 
 data class SessionInfo(

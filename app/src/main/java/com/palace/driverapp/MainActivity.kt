@@ -262,11 +262,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     }
 
     private fun loadUserDataInDrawer() {
+        // Cargar datos reales del driver desde AuthRepository
         val driverCode = authRepository.getDriverCode() ?: "Driver"
-        val driverName = authRepository.getDriverName() ?: "Nombre del Driver"
+        val driverFullName = authRepository.getDriverFullName() ?: "Nombre del Driver"
 
-        tvDriverName.text = driverName
-        tvDriverEmail.text = driverCode
+        tvDriverName.text = driverFullName  // Nombre completo real
+        tvDriverEmail.text = driverCode      // Código del driver
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -399,7 +400,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         lifecycleScope.launch {
             while (isPollingOtherDrivers) {
                 fetchOtherDrivers()
-                delay(3000) // Actualizar cada 3 segundos
+                delay(1000) // Actualizar cada 1 segundo (más rápido)
             }
         }
     }
@@ -408,9 +409,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         val result = telemetryRepository.getLiveDrivers()
 
         result.onSuccess { drivers ->
+            android.util.Log.d("MainActivity", "✅ Drivers recibidos: ${drivers.size}")
+            drivers.forEach { driver ->
+                android.util.Log.d("MainActivity", "  - ${driver.code}: ${driver.lastLat}, ${driver.lastLng}")
+            }
             updateOtherDriversOnMap(drivers)
         }.onFailure { exception ->
-            // Log error silenciosamente
+            android.util.Log.e("MainActivity", "❌ Error al obtener drivers: ${exception.message}")
         }
     }
 
@@ -451,12 +456,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             .anchor(0.5f, 0.5f)
             .flat(true)
             .rotation(driver.headingDeg ?: 0f)
-            .title("${driver.firstName} ${driver.lastNameP}")
-            .snippet("${driver.currentActivity}")
+            .title("${driver.firstName} ${driver.lastNameP}") // Título (no se muestra)
+            .snippet("${driver.currentActivity}")              // Snippet (no se muestra)
 
         val marker = mMap.addMarker(markerOptions)
         marker?.let {
             otherDriversMarkers[driver.id] = it
+            // REMOVIDO: No mostrar info window automáticamente
         }
     }
 

@@ -17,7 +17,6 @@ class AuthRepository(private val context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("DriverAppPrefs", Context.MODE_PRIVATE)
 
-    // API Service con provider de token
     private val apiService: DriverApiService = ApiConfig.createApiService { getToken() }
 
     // ==================== GETTERS/SETTERS ====================
@@ -28,14 +27,32 @@ class AuthRepository(private val context: Context) {
 
     fun getDriverCode(): String? = prefs.getString("driverCode", null)
 
-    fun getDriverName(): String? = prefs.getString("driverName", null)
+    // NUEVO: Obtener nombre completo del driver
+    fun getDriverFullName(): String? {
+        val firstName = prefs.getString("firstName", null)
+        val lastNameP = prefs.getString("lastNameP", null)
+        val lastNameM = prefs.getString("lastNameM", null)
+
+        return when {
+            firstName != null && lastNameP != null -> {
+                if (lastNameM != null) {
+                    "$firstName $lastNameP $lastNameM"
+                } else {
+                    "$firstName $lastNameP"
+                }
+            }
+            firstName != null -> firstName
+            else -> null
+        }
+    }
+
+    fun getDriverFirstName(): String? = prefs.getString("firstName", null)
 
     fun isLoggedIn(): Boolean = getToken() != null && getDriverId() != null
 
     fun getDeviceId(): String {
         var deviceId = prefs.getString("deviceId", null)
         if (deviceId == null) {
-            // Generar ID único del dispositivo
             deviceId = try {
                 Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
             } catch (e: Exception) {
@@ -52,6 +69,12 @@ class AuthRepository(private val context: Context) {
             putString("driverId", response.driver.id)
             putString("driverCode", response.driver.code)
             putString("driverStatus", response.driver.status)
+
+            // NUEVO: Guardar nombres del driver
+            response.driver.firstName?.let { putString("firstName", it) }
+            response.driver.lastNameP?.let { putString("lastNameP", it) }
+            response.driver.lastNameM?.let { putString("lastNameM", it) }
+
             putString("sessionId", response.session.sessionId)
             putString("expiresAt", response.session.expiresAt)
             putLong("loginTime", System.currentTimeMillis())
@@ -66,32 +89,36 @@ class AuthRepository(private val context: Context) {
 
     // ==================== AUTENTICACIÓN ====================
 
-    suspend fun login(username: String, password: String): Result<LoginResponse> =
-        withContext(Dispatchers.IO) {
-            try {
-                val request = LoginRequest(login = username, password = password, deviceId = getDeviceId())
-                val response = apiService.login(request)
+    suspend fun login(username: String, password: String): Result<LoginResponse> = withContext(Dispatchers.IO) {
+        try {
+            val request = LoginRequest(
+                login = username,
+                password = password,
+                deviceId = getDeviceId()
+            )
 
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        saveLoginData(body)
-                        Result.success(body)              // ahora es Result<LoginResponse>
-                    } else {
-                        Result.failure(Exception("Respuesta vacía del servidor"))
-                    }
-                } else {
-                    when (response.code()) {
-                        401 -> Result.failure(Exception("Credenciales inválidas"))
-                        403 -> Result.failure(Exception("Driver inactivo o suspendido"))
-                        else -> Result.failure(Exception("Error en el servidor: ${response.code()}"))
-                    }
+            val response = apiService.login(request)
+
+            when {
+                response.isSuccessful && response.body() != null -> {
+                    val loginResponse = response.body()!
+                    saveLoginData(loginResponse)
+                    Result.success(loginResponse)
                 }
-            } catch (e: Exception) {
-                Result.failure(Exception("Error de conexión: ${e.message}"))
+                response.code() == 401 -> {
+                    Result.failure(Exception("Credenciales inválidas"))
+                }
+                response.code() == 403 -> {
+                    Result.failure(Exception("Driver inactivo o suspendido"))
+                }
+                else -> {
+                    Result.failure(Exception("Error en el servidor: ${response.code()}"))
+                }
             }
+        } catch (e: Exception) {
+            Result.failure(Exception("Error de conexión: ${e.message}"))
         }
-
+    }
 
     // ==================== VALIDACIÓN DE SESIÓN ====================
 
@@ -111,8 +138,6 @@ class AuthRepository(private val context: Context) {
 
     suspend fun renewSessionIfNeeded(): Boolean {
         if (!isSessionExpired()) return true
-
-        // Si expiró, cerrar sesión y requerir login manual
         clearSession()
         return false
     }
