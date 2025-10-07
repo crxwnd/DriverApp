@@ -2,18 +2,23 @@ package com.palace.driverapp
 
 import android.Manifest
 import android.animation.ObjectAnimator
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.BounceInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -22,25 +27,22 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
+import com.palace.driverapp.network.models.LiveDriver
+import com.palace.driverapp.repository.AuthRepository
+import com.palace.driverapp.repository.TelemetryRepository
 import de.hdodenhof.circleimageview.CircleImageView
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import android.app.Dialog
-import android.net.Uri
-import android.view.LayoutInflater
-import android.view.animation.AccelerateDecelerateInterpolator
-import android.widget.LinearLayout
-import com.google.android.material.button.MaterialButton
-import kotlin.math.cos
-import kotlin.math.sin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
@@ -49,11 +51,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     private var currentLocationMarker: Marker? = null
     private var accuracyCircle: Circle? = null
 
+    // Marcadores de otros drivers
+    private val otherDriversMarkers = mutableMapOf<String, Marker>()
+
     // Location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private var currentLocation: Location? = null
     private var lastBearing: Float = 0f
+
+    // Repositories
+    private lateinit var authRepository: AuthRepository
+    private lateinit var telemetryRepository: TelemetryRepository
 
     // Navigation Drawer
     private lateinit var drawerLayout: DrawerLayout
@@ -73,13 +82,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
-    // Control de cámara
+    // Control
     private var isFirstLocationUpdate = true
     private var isFollowingUser = true
+    private var isPollingOtherDrivers = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Inicializar repositories
+        authRepository = AuthRepository(this)
+        telemetryRepository = TelemetryRepository(this)
+
+        // Verificar sesión
+        if (!authRepository.isLoggedIn()) {
+            goToLogin()
+            return
+        }
 
         // Configurar toolbar
         setupToolbar()
@@ -242,39 +262,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     }
 
     private fun loadUserDataInDrawer() {
-        val sharedPref = getSharedPreferences("DriverAppPrefs", MODE_PRIVATE)
-        val username = sharedPref.getString("username", "Usuario") ?: "Usuario"
+        val driverCode = authRepository.getDriverCode() ?: "Driver"
+        val driverName = authRepository.getDriverName() ?: "Nombre del Driver"
 
-        tvDriverName.text = "Juan Pérez"
-        tvDriverEmail.text = username
+        tvDriverName.text = driverName
+        tvDriverEmail.text = driverCode
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        // Configurar estilo del mapa
         setupMap()
-
-        // Verificar y solicitar permisos
         checkLocationPermissions()
-        mMap.uiSettings.apply {
-            isZoomControlsEnabled = true
-            isCompassEnabled = true
-            isMyLocationButtonEnabled = true
-            isMapToolbarEnabled = false
-        }
-
     }
 
     private fun setupMap() {
         try {
             mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
 
-            // Configurar controles del mapa
             mMap.uiSettings.apply {
                 isZoomControlsEnabled = false
                 isCompassEnabled = true
-                isMyLocationButtonEnabled = false // Usaremos nuestro propio botón
+                isMyLocationButtonEnabled = false
                 isMapToolbarEnabled = false
                 isTiltGesturesEnabled = true
                 isRotateGesturesEnabled = true
@@ -295,6 +303,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     private fun checkLocationPermissions() {
         if (hasLocationPermissions()) {
             enableLocationTracking()
+            startPollingOtherDrivers()
         } else {
             requestLocationPermissions()
         }
@@ -324,12 +333,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 enableLocationTracking()
+                startPollingOtherDrivers()
             } else {
-                Toast.makeText(
-                    this,
-                    "Se necesitan permisos de ubicación para mostrar tu posición",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this, "Se necesitan permisos de ubicación", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -338,42 +344,119 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         if (!hasLocationPermissions()) return
 
         try {
-            // Habilitar capa de ubicación (botón azul por defecto de Google)
-            mMap.isMyLocationEnabled = false // Lo deshabilitamos para usar nuestro marcador personalizado
+            mMap.isMyLocationEnabled = false
 
-            // Configurar solicitud de ubicación
             val locationRequest = LocationRequest.create().apply {
-                interval = 1000 // Actualizar cada 1 segundo
-                fastestInterval = 500 // Actualización más rápida cada 0.5 segundos
+                interval = 1000
+                fastestInterval = 500
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                smallestDisplacement = 1f // Actualizar si se mueve al menos 1 metro
+                smallestDisplacement = 1f
             }
 
-            // Callback para actualizaciones de ubicación
             locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
                     locationResult.lastLocation?.let { location ->
                         updateLocationOnMap(location)
+
+                        // Enviar telemetría al backend
+                        sendTelemetryToBackend(location)
                     }
                 }
             }
 
-            // Iniciar actualizaciones de ubicación
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
                 Looper.getMainLooper()
             )
 
-            // Obtener última ubicación conocida
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                location?.let {
-                    updateLocationOnMap(it)
-                }
+                location?.let { updateLocationOnMap(it) }
             }
 
         } catch (e: SecurityException) {
-            Toast.makeText(this, "Error de permisos de ubicación", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error de permisos", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun sendTelemetryToBackend(location: Location) {
+        lifecycleScope.launch {
+            val result = telemetryRepository.sendTelemetry(location)
+
+            result.onFailure { exception ->
+                if (exception.message?.contains("Sesión expirada") == true) {
+                    Toast.makeText(this@MainActivity, "Sesión expirada", Toast.LENGTH_SHORT).show()
+                    goToLogin()
+                }
+            }
+        }
+    }
+
+    private fun startPollingOtherDrivers() {
+        if (isPollingOtherDrivers) return
+        isPollingOtherDrivers = true
+
+        lifecycleScope.launch {
+            while (isPollingOtherDrivers) {
+                fetchOtherDrivers()
+                delay(3000) // Actualizar cada 3 segundos
+            }
+        }
+    }
+
+    private suspend fun fetchOtherDrivers() {
+        val result = telemetryRepository.getLiveDrivers()
+
+        result.onSuccess { drivers ->
+            updateOtherDriversOnMap(drivers)
+        }.onFailure { exception ->
+            // Log error silenciosamente
+        }
+    }
+
+    private fun updateOtherDriversOnMap(drivers: List<LiveDriver>) {
+        // Eliminar marcadores de drivers que ya no están
+        val currentDriverIds = drivers.map { it.id }.toSet()
+        val markersToRemove = otherDriversMarkers.keys.filter { it !in currentDriverIds }
+
+        markersToRemove.forEach { driverId ->
+            otherDriversMarkers[driverId]?.remove()
+            otherDriversMarkers.remove(driverId)
+        }
+
+        // Actualizar o crear marcadores
+        drivers.forEach { driver ->
+            if (driver.lastLat != null && driver.lastLng != null) {
+                val latLng = LatLng(driver.lastLat, driver.lastLng)
+
+                val existingMarker = otherDriversMarkers[driver.id]
+                if (existingMarker != null) {
+                    // Actualizar marcador existente
+                    animateMarkerToPosition(existingMarker, latLng)
+                    driver.headingDeg?.let { heading ->
+                        animateMarkerRotation(existingMarker, heading)
+                    }
+                } else {
+                    // Crear nuevo marcador
+                    addOtherDriverMarker(driver, latLng)
+                }
+            }
+        }
+    }
+
+    private fun addOtherDriverMarker(driver: LiveDriver, latLng: LatLng) {
+        val markerOptions = MarkerOptions()
+            .position(latLng)
+            .icon(getOtherDriverIcon())
+            .anchor(0.5f, 0.5f)
+            .flat(true)
+            .rotation(driver.headingDeg ?: 0f)
+            .title("${driver.firstName} ${driver.lastNameP}")
+            .snippet("${driver.currentActivity}")
+
+        val marker = mMap.addMarker(markerOptions)
+        marker?.let {
+            otherDriversMarkers[driver.id] = it
         }
     }
 
@@ -381,9 +464,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         currentLocation = location
         val latLng = LatLng(location.latitude, location.longitude)
 
-        // Actualizar o crear marcador
         if (currentLocationMarker == null) {
-            // Crear marcador personalizado
             val markerOptions = MarkerOptions()
                 .position(latLng)
                 .icon(getCustomLocationIcon())
@@ -393,7 +474,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
             currentLocationMarker = mMap.addMarker(markerOptions)
 
-            // Crear círculo de precisión
             val circleOptions = CircleOptions()
                 .center(latLng)
                 .radius(location.accuracy.toDouble())
@@ -404,16 +484,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             accuracyCircle = mMap.addCircle(circleOptions)
 
         } else {
-            // Actualizar posición del marcador con animación suave
             animateMarkerToPosition(currentLocationMarker!!, latLng)
 
-            // Actualizar rotación si hay cambio en el bearing
             if (location.hasBearing() && location.bearing != lastBearing) {
                 animateMarkerRotation(currentLocationMarker!!, location.bearing)
                 lastBearing = location.bearing
             }
 
-            // Actualizar círculo de precisión
             accuracyCircle?.center = latLng
             accuracyCircle?.radius = location.accuracy.toDouble()
         }
@@ -444,10 +521,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
+    private fun getOtherDriverIcon(): BitmapDescriptor {
+        val drawable = ContextCompat.getDrawable(this, R.drawable.ic_other_driver)
+        val bitmap = Bitmap.createBitmap(
+            drawable!!.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
     private fun animateMarkerToPosition(marker: Marker, targetPosition: LatLng) {
         val startPosition = marker.position
         val startTime = System.currentTimeMillis()
-        val duration = 1000L // 1 segundo
+        val duration = 1000L
 
         val handler = android.os.Handler(Looper.getMainLooper())
         handler.post(object : Runnable {
@@ -459,7 +549,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                     val lat = startPosition.latitude + (targetPosition.latitude - startPosition.latitude) * t
                     val lng = startPosition.longitude + (targetPosition.longitude - startPosition.longitude) * t
                     marker.position = LatLng(lat, lng)
-                    handler.postDelayed(this, 16) // ~60 FPS
+                    handler.postDelayed(this, 16)
                 } else {
                     marker.position = targetPosition
                 }
@@ -471,7 +561,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         val startRotation = marker.rotation
         var rotation = targetRotation
 
-        // Normalizar rotación para tomar el camino más corto
         var diff = rotation - startRotation
         if (diff > 180) diff -= 360
         if (diff < -180) diff += 360
@@ -497,7 +586,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         })
     }
 
-    // Funciones del Navigation Drawer (showHelp, showGuide, etc.)
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_help -> showHelp()
@@ -509,30 +597,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     }
 
     private fun showHelp() {
-        // Crear diálogo personalizado
         val dialog = Dialog(this, R.style.CustomDialogTheme)
-
-        // Inflar el layout personalizado
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_help, null)
         dialog.setContentView(view)
-
-        // Hacer que el diálogo sea cancelable tocando fuera
         dialog.setCancelable(true)
         dialog.setCanceledOnTouchOutside(true)
 
-        // Referencias a las vistas
         val ivHelpIcon = view.findViewById<ImageView>(R.id.ivHelpIcon)
         val llEmail = view.findViewById<LinearLayout>(R.id.llEmail)
         val llPhone = view.findViewById<LinearLayout>(R.id.llPhone)
         val llWhatsApp = view.findViewById<LinearLayout>(R.id.llWhatsApp)
         val btnClose = view.findViewById<MaterialButton>(R.id.btnClose)
 
-        // Animación de entrada del icono (rotación + escala)
-        ivHelpIcon.post {
-            animateIcon(ivHelpIcon)
-        }
+        ivHelpIcon.post { animateIcon(ivHelpIcon) }
 
-        // Click en Email - Abrir cliente de email
         llEmail.setOnClickListener {
             animateClick(it)
             try {
@@ -546,7 +624,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             }
         }
 
-        // Click en Teléfono - Abrir marcador
         llPhone.setOnClickListener {
             animateClick(it)
             try {
@@ -559,11 +636,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             }
         }
 
-        // Click en WhatsApp - Abrir WhatsApp
         llWhatsApp.setOnClickListener {
             animateClick(it)
             try {
-                val phoneNumber = "529981234567" // Formato internacional sin +
+                val phoneNumber = "529981234567"
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     data = Uri.parse("https://wa.me/$phoneNumber?text=Hola, necesito ayuda con la aplicación")
                 }
@@ -573,76 +649,47 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             }
         }
 
-        // Botón de cerrar
-        btnClose.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        // Mostrar el diálogo
+        btnClose.setOnClickListener { dialog.dismiss() }
         dialog.show()
     }
 
     private fun showGuide() {
-        // Crear diálogo personalizado
         val dialog = Dialog(this, R.style.CustomDialogTheme)
-
-        // Inflar el layout personalizado
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_guide, null)
         dialog.setContentView(view)
-
-        // Hacer que el diálogo sea cancelable tocando fuera
         dialog.setCancelable(true)
         dialog.setCanceledOnTouchOutside(true)
 
-        // Referencias a las vistas
         val ivGuideIcon = view.findViewById<ImageView>(R.id.ivGuideIcon)
         val btnClose = view.findViewById<MaterialButton>(R.id.btnClose)
 
-        // Animación de entrada del icono
-        ivGuideIcon.post {
-            animateIcon(ivGuideIcon)
-        }
-
-        // Botón de cerrar
-        btnClose.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        // Mostrar el diálogo
+        ivGuideIcon.post { animateIcon(ivGuideIcon) }
+        btnClose.setOnClickListener { dialog.dismiss() }
         dialog.show()
     }
 
-    // Función para animar el icono del diálogo (efecto de "bounce")
     private fun animateIcon(view: View) {
-        // Animación de escala (bounce effect)
         val scaleX = ObjectAnimator.ofFloat(view, "scaleX", 0f, 1.2f, 1f)
         val scaleY = ObjectAnimator.ofFloat(view, "scaleY", 0f, 1.2f, 1f)
 
         scaleX.duration = 600
         scaleY.duration = 600
-
         scaleX.interpolator = AccelerateDecelerateInterpolator()
         scaleY.interpolator = AccelerateDecelerateInterpolator()
-
         scaleX.start()
         scaleY.start()
 
-        // Animación de rotación sutil
         val rotation = ObjectAnimator.ofFloat(view, "rotation", 0f, 10f, -10f, 0f)
         rotation.duration = 800
         rotation.startDelay = 200
         rotation.start()
     }
 
-    // Función para animar el click en las opciones
     private fun animateClick(view: View) {
-        // Efecto de "press" al tocar
         val scaleDown = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.95f, 1f)
         val scaleDownY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.95f, 1f)
-
         scaleDown.duration = 150
         scaleDownY.duration = 150
-
         scaleDown.start()
         scaleDownY.start()
     }
@@ -651,22 +698,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         MaterialAlertDialogBuilder(this)
             .setTitle("Cerrar sesión")
             .setMessage("¿Está seguro que desea cerrar sesión?")
-            .setNegativeButton("Cancelar") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .setPositiveButton("Cerrar sesión") { _, _ ->
-                performLogout()
-            }
+            .setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton("Cerrar sesión") { _, _ -> performLogout() }
             .show()
     }
 
     private fun performLogout() {
-        val sharedPref = getSharedPreferences("DriverAppPrefs", MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            clear()
-            apply()
-        }
+        authRepository.clearSession()
+        goToLogin()
+    }
 
+    private fun goToLogin() {
         val intent = Intent(this, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -675,9 +717,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (toggle.onOptionsItemSelected(item)) {
-            return true
-        }
+        if (toggle.onOptionsItemSelected(item)) return true
         return super.onOptionsItemSelected(item)
     }
 
@@ -689,9 +729,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                 .setTitle("Salir")
                 .setMessage("¿Desea salir de la aplicación?")
                 .setNegativeButton("No", null)
-                .setPositiveButton("Sí") { _, _ ->
-                    super.onBackPressed()
-                }
+                .setPositiveButton("Sí") { _, _ -> super.onBackPressed() }
                 .show()
         }
     }
@@ -700,6 +738,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         super.onResume()
         if (hasLocationPermissions() && ::locationCallback.isInitialized) {
             enableLocationTracking()
+        }
+        if (!isPollingOtherDrivers) {
+            startPollingOtherDrivers()
         }
     }
 
@@ -712,6 +753,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
     override fun onDestroy() {
         super.onDestroy()
+        isPollingOtherDrivers = false
         if (::locationCallback.isInitialized) {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }

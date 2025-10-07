@@ -1,7 +1,5 @@
 package com.palace.driverapp
 
-
-import kotlinx.coroutines.*
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Intent
@@ -13,17 +11,17 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
-import androidx.core.view.ViewCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import android.widget.ProgressBar
 import android.widget.TextView
-import kotlinx.coroutines.*
+import com.palace.driverapp.repository.AuthRepository
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
-    // Declaración de vistas
+    // Vistas
     private lateinit var cvLogo: CardView
     private lateinit var tvWelcomeTitle: TextView
     private lateinit var tvSubtitle: TextView
@@ -34,16 +32,18 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var tilPassword: TextInputLayout
     private lateinit var btnLogin: MaterialButton
     private lateinit var cvProgressContainer: CardView
-    private lateinit var progressBar: ProgressBar
     private lateinit var cvError: CardView
     private lateinit var tvError: TextView
 
-    // Scope para corrutinas
-    private val loginScope = CoroutineScope(Dispatchers.Main + Job())
+    // Repository
+    private lateinit var authRepository: AuthRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        // Inicializar repository
+        authRepository = AuthRepository(this)
 
         // Inicializar vistas
         initializeViews()
@@ -69,19 +69,16 @@ class LoginActivity : AppCompatActivity() {
         tilPassword = findViewById(R.id.tilPassword)
         btnLogin = findViewById(R.id.btnLogin)
         cvProgressContainer = findViewById(R.id.cvProgressContainer)
-        progressBar = findViewById(R.id.progressBar)
         cvError = findViewById(R.id.cvError)
         tvError = findViewById(R.id.tvError)
     }
 
     private fun setupListeners() {
-        // Listener del botón de login
         btnLogin.setOnClickListener {
             animateButtonClick(it)
             attemptLogin()
         }
 
-        // Limpiar errores cuando el usuario empiece a escribir
         etUsername.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 tilUsername.error = null
@@ -98,7 +95,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun startEntranceAnimations() {
-        // Hacer invisibles los elementos inicialmente
         cvLogo.alpha = 0f
         cvLogo.translationY = -100f
         tvWelcomeTitle.alpha = 0f
@@ -106,7 +102,6 @@ class LoginActivity : AppCompatActivity() {
         cvLoginForm.alpha = 0f
         cvLoginForm.translationY = 50f
 
-        // Animar logo con bounce
         cvLogo.animate()
             .alpha(1f)
             .translationY(0f)
@@ -114,21 +109,18 @@ class LoginActivity : AppCompatActivity() {
             .setInterpolator(BounceInterpolator())
             .start()
 
-        // Animar título
         tvWelcomeTitle.animate()
             .alpha(1f)
             .setStartDelay(300)
             .setDuration(600)
             .start()
 
-        // Animar subtítulo
         tvSubtitle.animate()
             .alpha(1f)
             .setStartDelay(450)
             .setDuration(600)
             .start()
 
-        // Animar formulario
         cvLoginForm.animate()
             .alpha(1f)
             .translationY(0f)
@@ -137,7 +129,6 @@ class LoginActivity : AppCompatActivity() {
             .setInterpolator(OvershootInterpolator(0.8f))
             .start()
 
-        // Rotación sutil del logo
         ObjectAnimator.ofFloat(cvLogo, "rotation", 0f, 360f).apply {
             duration = 1000
             startDelay = 200
@@ -159,32 +150,25 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun attemptLogin() {
-        // Obtener valores de los campos
         val username = etUsername.text.toString().trim()
         val password = etPassword.text.toString().trim()
 
-        // Validar campos
         if (!validateInputs(username, password)) {
             return
         }
 
-        // Mostrar loading
         showLoading(true)
 
-        // Realizar login
-        loginScope.launch {
-            try {
-                val loginSuccess = performLogin(username, password)
+        // Llamar al backend
+        lifecycleScope.launch {
+            val result = authRepository.login(username, password)
 
-                if (loginSuccess) {
-                    onLoginSuccess(username)
-                } else {
-                    onLoginError("Usuario o contraseña incorrectos")
-                }
-            } catch (e: Exception) {
-                onLoginError("Error de conexión. Intente nuevamente")
-            } finally {
-                showLoading(false)
+            showLoading(false)
+
+            result.onSuccess { loginResponse ->
+                onLoginSuccess(loginResponse.driver.code)
+            }.onFailure { exception ->
+                onLoginError(exception.message ?: "Error desconocido")
             }
         }
     }
@@ -196,8 +180,8 @@ class LoginActivity : AppCompatActivity() {
             tilUsername.error = "Este campo es requerido"
             shakeView(tilUsername)
             isValid = false
-        } else if (!isValidEmailOrUsername(username)) {
-            tilUsername.error = "Ingrese un usuario o correo válido"
+        } else if (username.length < 3) {
+            tilUsername.error = "Mínimo 3 caracteres"
             shakeView(tilUsername)
             isValid = false
         }
@@ -215,28 +199,13 @@ class LoginActivity : AppCompatActivity() {
         return isValid
     }
 
-    private fun isValidEmailOrUsername(input: String): Boolean {
-        val emailPattern = android.util.Patterns.EMAIL_ADDRESS
-        return emailPattern.matcher(input).matches() || input.length >= 3
-    }
-
-    private suspend fun performLogin(username: String, password: String): Boolean {
-        delay(1500) // Simular llamada a API
-
-        // TODO: Reemplazar con llamada real a tu API
-        return (username == "admin" || username == "admin@driver.com") && password == "123456"
-    }
-
-    private fun onLoginSuccess(username: String) {
-        // Animar éxito
+    private fun onLoginSuccess(driverCode: String) {
         animateSuccess()
 
-        // Guardar sesión
-        saveUserSession(username)
+        Toast.makeText(this, "Bienvenido $driverCode", Toast.LENGTH_SHORT).show()
 
-        // Navegar después de la animación
-        loginScope.launch {
-            delay(800)
+        lifecycleScope.launch {
+            kotlinx.coroutines.delay(800)
             val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
@@ -320,7 +289,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun animateSuccess() {
-        // Animar el formulario con efecto de éxito
         val scaleX = ObjectAnimator.ofFloat(cvLoginForm, "scaleX", 1f, 1.05f, 1f)
         val scaleY = ObjectAnimator.ofFloat(cvLoginForm, "scaleY", 1f, 1.05f, 1f)
 
@@ -330,34 +298,13 @@ class LoginActivity : AppCompatActivity() {
         animatorSet.interpolator = AccelerateDecelerateInterpolator()
         animatorSet.start()
 
-        // Cambiar color del botón temporalmente (efecto de éxito)
-        btnLogin.setIconResource(android.R.drawable.ic_menu_send)
         btnLogin.text = "¡Bienvenido!"
     }
 
-    private fun saveUserSession(username: String) {
-        val sharedPref = getSharedPreferences("DriverAppPrefs", MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            putBoolean("isLoggedIn", true)
-            putString("username", username)
-            putLong("loginTime", System.currentTimeMillis())
-            apply()
-        }
-    }
-
     private fun checkExistingSession() {
-        val sharedPref = getSharedPreferences("DriverAppPrefs", MODE_PRIVATE)
-        val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-
-        if (isLoggedIn) {
-            // Si ya hay sesión, ir directamente a MainActivity
+        if (authRepository.isLoggedIn() && !authRepository.isSessionExpired()) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        loginScope.cancel()
     }
 }
