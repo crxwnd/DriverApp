@@ -101,22 +101,22 @@ class AuthRepository(private val context: Context) {
 
             when {
                 response.isSuccessful && response.body() != null -> {
-                    val loginResponse = response.body()!
+                    val loginResponse = response.body()!!
                     saveLoginData(loginResponse)
-                    Result.success(loginResponse)
+                    return@withContext Result.success(loginResponse)
                 }
                 response.code() == 401 -> {
-                    Result.failure(Exception("Credenciales inválidas"))
+                    return@withContext Result.failure(Exception("Credenciales inválidas"))
                 }
                 response.code() == 403 -> {
-                    Result.failure(Exception("Driver inactivo o suspendido"))
+                    return@withContext Result.failure(Exception("Driver inactivo o suspendido"))
                 }
                 else -> {
-                    Result.failure(Exception("Error en el servidor: ${response.code()}"))
+                    return@withContext Result.failure(Exception("Error en el servidor: ${response.code()}"))
                 }
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión: ${e.message}"))
+            return@withContext Result.failure(Exception("Error de conexión: ${e.message}"))
         }
     }
 
