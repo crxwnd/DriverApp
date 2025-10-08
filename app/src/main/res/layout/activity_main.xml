@@ -10,10 +10,17 @@
     tools:context=".MainActivity"
     tools:openDrawer="start">
 
-    <!-- Contenido principal (Placeholder del Mapa y Toolbar) -->
+    <!-- Contenido principal (Mapa real con Google Maps) -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
+        <!-- Google Maps Fragment -->
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
         <!-- Toolbar personalizada flotante -->
         <androidx.appcompat.widget.Toolbar
@@ -23,118 +30,7 @@
             android:background="@android:color/transparent"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            android:elevation="8dp">
-
-            <!-- Contenedor para personalización adicional si la necesitas -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <!-- Espacio para el icono de menú (se añade automáticamente) -->
-
-            </LinearLayout>
-
-        </androidx.appcompat.widget.Toolbar>
-
-        <!-- Placeholder temporal del Mapa -->
-        <FrameLayout
-            android:id="@+id/mapPlaceholder"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/surface">
-
-            <!-- Patrón de cuadrícula que simula un mapa -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="#E8F5E8"
-                android:alpha="0.6" />
-
-            <!-- Líneas simulando calles -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:layout_marginTop="150dp"
-                android:background="@color/primary"
-                android:alpha="0.3" />
-
-            <View
-                android:layout_width="2dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="120dp"
-                android:background="@color/primary"
-                android:alpha="0.3" />
-
-            <!-- Contenido central del placeholder -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="32dp"
-                android:background="@drawable/menu_button_background">
-
-                <!-- Icono temporal -->
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:src="@drawable/ic_home"
-                    android:contentDescription="Icono temporal"
-                    app:tint="@color/white"
-                    android:layout_marginBottom="12dp" />
-
-                <!-- Título -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Mapa en Desarrollo"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"
-                    android:gravity="center"
-                    android:layout_marginBottom="6dp" />
-
-                <!-- Descripción -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Próximamente aquí verás\ntu ruta asignada"
-                    android:textSize="14sp"
-                    android:textColor="@color/white"
-                    android:gravity="center"
-                    android:alpha="0.9"
-                    android:lineSpacingExtra="2dp" />
-
-            </LinearLayout>
-
-            <!-- Botón simulado de "Mi ubicación" -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="80dp"
-                android:src="@drawable/ic_person"
-                android:contentDescription="Mi ubicación"
-                app:backgroundTint="@color/white"
-                app:tint="@color/primary"
-                android:alpha="0.8" />
-
-        </FrameLayout>
-
-        <!-- Botón flotante del menú hamburguesa con fondo semi-transparente -->
-        <FrameLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_margin="16dp"
-            android:background="@drawable/menu_button_background"
-            android:elevation="8dp">
-
-            <!-- El icono se maneja desde la toolbar -->
-
-        </FrameLayout>
+            android:elevation="8dp" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

@@ -1,3 +1,4 @@
+<!-- drawer_header_background.xml -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <gradient
         android:angle="135"

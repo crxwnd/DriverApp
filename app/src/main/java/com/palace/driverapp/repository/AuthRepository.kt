@@ -1,0 +1,144 @@
+package com.palace.driverapp.repository
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.provider.Settings
+import com.palace.driverapp.network.ApiConfig
+import com.palace.driverapp.network.DriverApiService
+import com.palace.driverapp.network.models.LoginRequest
+import com.palace.driverapp.network.models.LoginResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
+
+class AuthRepository(private val context: Context) {
+
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("DriverAppPrefs", Context.MODE_PRIVATE)
+
+    private val apiService: DriverApiService = ApiConfig.createApiService { getToken() }
+
+    // ==================== GETTERS/SETTERS ====================
+
+    fun getToken(): String? = prefs.getString("token", null)
+
+    fun getDriverId(): String? = prefs.getString("driverId", null)
+
+    fun getDriverCode(): String? = prefs.getString("driverCode", null)
+
+    // NUEVO: Obtener nombre completo del driver
+    fun getDriverFullName(): String? {
+        val firstName = prefs.getString("firstName", null)
+        val lastNameP = prefs.getString("lastNameP", null)
+        val lastNameM = prefs.getString("lastNameM", null)
+
+        return when {
+            firstName != null && lastNameP != null -> {
+                if (lastNameM != null) {
+                    "$firstName $lastNameP $lastNameM"
+                } else {
+                    "$firstName $lastNameP"
+                }
+            }
+            firstName != null -> firstName
+            else -> null
+        }
+    }
+
+    fun getDriverFirstName(): String? = prefs.getString("firstName", null)
+
+    fun isLoggedIn(): Boolean = getToken() != null && getDriverId() != null
+
+    fun getDeviceId(): String {
+        var deviceId = prefs.getString("deviceId", null)
+        if (deviceId == null) {
+            deviceId = try {
+                Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+            } catch (e: Exception) {
+                UUID.randomUUID().toString()
+            }
+            prefs.edit().putString("deviceId", deviceId).apply()
+        }
+        return deviceId
+    }
+
+    private fun saveLoginData(response: LoginResponse) {
+        prefs.edit().apply {
+            putString("token", response.token)
+            putString("driverId", response.driver.id)
+            putString("driverCode", response.driver.code)
+            putString("driverStatus", response.driver.status)
+
+            // NUEVO: Guardar nombres del driver
+            response.driver.firstName?.let { putString("firstName", it) }
+            response.driver.lastNameP?.let { putString("lastNameP", it) }
+            response.driver.lastNameM?.let { putString("lastNameM", it) }
+
+            putString("sessionId", response.session.sessionId)
+            putString("expiresAt", response.session.expiresAt)
+            putLong("loginTime", System.currentTimeMillis())
+            putBoolean("isLoggedIn", true)
+            apply()
+        }
+    }
+
+    fun clearSession() {
+        prefs.edit().clear().apply()
+    }
+
+    // ==================== AUTENTICACIÓN ====================
+
+    suspend fun login(username: String, password: String): Result<LoginResponse> = withContext(Dispatchers.IO) {
+        try {
+            val request = LoginRequest(
+                login = username,
+                password = password,
+                deviceId = getDeviceId()
+            )
+
+            val response = apiService.login(request)
+
+            when {
+                response.isSuccessful && response.body() != null -> {
+                    val loginResponse = response.body()!
+                    saveLoginData(loginResponse)
+                    Result.success(loginResponse)
+                }
+                response.code() == 401 -> {
+                    Result.failure(Exception("Credenciales inválidas"))
+                }
+                response.code() == 403 -> {
+                    Result.failure(Exception("Driver inactivo o suspendido"))
+                }
+                else -> {
+                    Result.failure(Exception("Error en el servidor: ${response.code()}"))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Error de conexión: ${e.message}"))
+        }
+    }
+
+    // ==================== VALIDACIÓN DE SESIÓN ====================
+
+    fun isSessionExpired(): Boolean {
+        val expiresAtStr = prefs.getString("expiresAt", null) ?: return true
+
+        return try {
+            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+            format.timeZone = TimeZone.getTimeZone("UTC")
+            val expiresAt = format.parse(expiresAtStr)
+            val now = Date()
+            now.after(expiresAt)
+        } catch (e: Exception) {
+            true
+        }
+    }
+
+    suspend fun renewSessionIfNeeded(): Boolean {
+        if (!isSessionExpired()) return true
+        clearSession()
+        return false
+    }
+}
