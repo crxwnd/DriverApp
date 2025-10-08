@@ -46,7 +46,9 @@ data class TelemetryRequest(
 // ==================== DRIVERS EN VIVO ====================
 
 data class LiveDriversResponse(
-    val drivers: List<LiveDriver>
+    val drivers: List<LiveDriver>?,  // ⬅️ Nullable
+    val count: Int?,                 // ⬅️ Opcional, lo devuelve el backend
+    val now: String?                 // ⬅️ Opcional, lo devuelve el backend
 )
 
 data class LiveDriver(
@@ -55,7 +57,7 @@ data class LiveDriver(
     val firstName: String,
     val lastNameP: String,
     val lastNameM: String?,
-    val currentActivity: String,  // "AVAILABLE", "ON_TRIP", etc.
+    val currentActivity: String,
     val lastLat: Double?,
     val lastLng: Double?,
     val lastSeenAt: String?,

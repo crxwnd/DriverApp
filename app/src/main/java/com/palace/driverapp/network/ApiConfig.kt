@@ -12,9 +12,9 @@ object ApiConfig {
     // URL base de tu servidor
     private const val BASE_URL = "https://app.bescoders.com/"
 
-    // Interceptor para logs (solo en desarrollo)
+    // Interceptor para logs con más detalle
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = HttpLoggingInterceptor.Level.BODY  // ⬅️ BODY para ver todo el JSON
     }
 
     // Interceptor para agregar token automáticamente

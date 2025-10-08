@@ -27,8 +27,8 @@ interface DriverApiService {
 
     /**
      * Obtener drivers en vivo
-     * GET /api/live/drivers
+     * GET /api/live/drivers?format=mobile
      */
-    @GET("api/live/drivers")
+    @GET("api/live/drivers?format=mobile")  // ⬅️ Agrega el parámetro aquí
     suspend fun getLiveDrivers(): Response<LiveDriversResponse>
 }

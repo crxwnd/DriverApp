@@ -65,18 +65,46 @@ class TelemetryRepository(context: Context) {
             when {
                 response.isSuccessful && response.body() != null -> {
                     val myDriverId = authRepository.getDriverId()
-                    // Filtrar: no mostrar mi propio driver
-                    val otherDrivers = response.body()!!.drivers.filter {
-                        it.id != myDriverId && it.lastLat != null && it.lastLng != null
+
+                    // El backend devuelve { drivers: [...] } con format=mobile
+                    val allDrivers = response.body()!!.drivers ?: emptyList()
+
+                    android.util.Log.d("TelemetryRepo", "🔍 Mi ID: $myDriverId")
+                    android.util.Log.d("TelemetryRepo", "🔍 Total drivers en respuesta: ${allDrivers.size}")
+
+                    allDrivers.forEach { driver ->
+                        android.util.Log.d("TelemetryRepo", """
+                        📍 ${driver.code} (${driver.firstName} ${driver.lastNameP})
+                           - ID: ${driver.id}
+                           - Lat: ${driver.lastLat}, Lng: ${driver.lastLng}
+                           - Activity: ${driver.currentActivity}
+                    """.trimIndent())
                     }
-                    Result.success(otherDrivers)
+
+                    // Filtrar: no mostrar mi propio driver y solo los que tienen ubicación
+                    val otherDrivers = allDrivers.filter {
+                        val isNotMe = it.id != myDriverId
+                        val hasLocation = it.lastLat != null && it.lastLng != null
+
+                        android.util.Log.d("TelemetryRepo", "   Filter ${it.code}: isNotMe=$isNotMe, hasLocation=$hasLocation")
+
+                        isNotMe && hasLocation
+                    }
+
+                    android.util.Log.d("TelemetryRepo", "✅ Drivers después de filtrar: ${otherDrivers.size}")
+
+                    return@withContext Result.success(otherDrivers)
                 }
                 else -> {
-                    Result.failure(Exception("Error al obtener drivers: ${response.code()}"))
+                    android.util.Log.e("TelemetryRepo", "❌ Response code: ${response.code()}")
+                    android.util.Log.e("TelemetryRepo", "❌ Response body: ${response.errorBody()?.string()}")
+                    return@withContext Result.failure(Exception("Error al obtener drivers: ${response.code()}"))
                 }
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de red: ${e.message}"))
+            android.util.Log.e("TelemetryRepo", "❌ Exception: ${e.message}", e)
+            e.printStackTrace()
+            return@withContext Result.failure(Exception("Error de red: ${e.message}"))
         }
     }
 
