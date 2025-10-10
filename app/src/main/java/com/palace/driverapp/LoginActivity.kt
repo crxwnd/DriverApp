@@ -34,8 +34,6 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var cvProgressContainer: CardView
     private lateinit var cvError: CardView
     private lateinit var tvError: TextView
-
-    // Repository
     private lateinit var authRepository: AuthRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
