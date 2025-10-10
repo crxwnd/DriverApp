@@ -204,7 +204,8 @@ class LoginActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             kotlinx.coroutines.delay(800)
-            val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
+            // Cambiar de MainActivity a BusSelectionActivity
+            val intent = Intent(this@LoginActivity, BusSelectionActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
             startActivity(intent)
