@@ -87,6 +87,44 @@ class AuthRepository(private val context: Context) {
         prefs.edit().clear().apply()
     }
 
+    // ==================== MÉTODOS PARA AUTOBÚS ====================
+
+    fun saveBusData(bus: Bus) {
+        prefs.edit().apply {
+            putString("busId", bus.id)
+            putString("busNumber", bus.number)
+            putString("busPlate", bus.plate)
+            putString("busModel", bus.model)
+            putInt("busCapacity", bus.capacity)
+            putString("busStatus", bus.status)
+            apply()
+        }
+    }
+
+    fun getBusId(): String? = prefs.getString("busId", null)
+
+    fun getBusNumber(): String? = prefs.getString("busNumber", null)
+
+    fun getBusPlate(): String? = prefs.getString("busPlate", null)
+
+    fun getBusModel(): String? = prefs.getString("busModel", null)
+
+    fun getBusCapacity(): Int = prefs.getInt("busCapacity", 0)
+
+    fun getBusStatus(): String? = prefs.getString("busStatus", null)
+
+    fun clearBusData() {
+        prefs.edit().apply {
+            remove("busId")
+            remove("busNumber")
+            remove("busPlate")
+            remove("busModel")
+            remove("busCapacity")
+            remove("busStatus")
+            apply()
+        }
+    }
+
     // ==================== AUTENTICACIÓN ====================
 
     suspend fun login(username: String, password: String): Result<LoginResponse> = withContext(Dispatchers.IO) {
