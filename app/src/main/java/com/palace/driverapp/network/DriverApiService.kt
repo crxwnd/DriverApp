@@ -31,4 +31,23 @@ interface DriverApiService {
      */
     @GET("api/live/drivers?format=mobile")  // ⬅️ Agrega el parámetro aquí
     suspend fun getLiveDrivers(): Response<LiveDriversResponse>
+
+    /**
+     * Obtener autobuses disponibles
+     * GET /api/driver/buses
+     * Requiere token en el header
+     */
+    @GET("api/driver/buses")
+    suspend fun getAvailableBuses(): Response<GetBusesResponse>
+
+    /**
+     * Seleccionar un autobús
+     * POST /api/driver/buses/select
+     * Requiere token en el header
+     */
+    @POST("api/driver/buses/select")
+    suspend fun selectBus(
+        @Body request: SelectBusRequest
+    ): Response<SelectBusResponse>
+
 }
