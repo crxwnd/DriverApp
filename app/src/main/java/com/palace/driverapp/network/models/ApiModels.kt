@@ -65,6 +65,35 @@ data class LiveDriver(
     val speedKph: Float?
 )
 
+// ==================== AUTOBUSES ====================
+
+data class Bus(
+    val id: String,
+    val number: String,           // Número de unidad (ej: "123")
+    val plate: String,            // Placa (ej: "ABC-1234")
+    val model: String,            // Modelo (ej: "Volvo 2024")
+    val capacity: Int,            // Capacidad de pasajeros
+    val status: String,           // "AVAILABLE", "MAINTENANCE", "IN_USE"
+    val companyId: String,
+    val assignedDriver: String?   // ID del driver asignado actualmente
+)
+
+data class GetBusesResponse(
+    val buses: List<Bus>,
+    val count: Int?
+)
+
+data class SelectBusRequest(
+    val busId: String,
+    val driverId: String
+)
+
+data class SelectBusResponse(
+    val success: Boolean,
+    val message: String,
+    val bus: Bus?
+)
+
 // ==================== ERRORES ====================
 
 data class ErrorResponse(
