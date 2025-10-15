@@ -101,6 +101,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             return
         }
 
+        // ✅ VALIDACIÓN NUEVA: Verificar que haya vehículo seleccionado
+        if (authRepository.getVehicleId() == null) {
+            val intent = Intent(this, BusSelectionActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+            return
+        }
+
         // Configurar toolbar
         setupToolbar()
 

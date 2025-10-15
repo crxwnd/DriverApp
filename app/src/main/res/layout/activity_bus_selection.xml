@@ -18,7 +18,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Selecciona tu Autobús"
+            android:text="Selecciona tu Vehículo"
             android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="@color/primary"
@@ -28,13 +28,13 @@
             android:id="@+id/tvSubtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Elige la unidad con la que trabajarás hoy"
+            android:text="Elige el vehículo con el que trabajarás hoy"
             android:textSize="14sp"
             android:textColor="@color/text_secondary" />
 
     </LinearLayout>
 
-    <!-- RecyclerView para Autobuses -->
+    <!-- RecyclerView para Vehículos -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvBuses"
         android:layout_width="match_parent"
@@ -53,16 +53,27 @@
         android:gravity="center"
         android:visibility="gone">
 
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_bus"
+            android:contentDescription="Empty State"
+            android:alpha="0.3"
+            android:layout_marginBottom="16dp" />
+
         <TextView
+            android:id="@+id/tvEmptyMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="No hay autobuses disponibles"
+            android:text="No hay vehículos disponibles"
             android:textSize="16sp"
-            android:textColor="@color/text_secondary"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:layout_marginBottom="8dp" />
 
         <TextView
+            android:id="@+id/tvEmptyDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Contacta al administrador"
@@ -108,17 +119,43 @@
 
     </androidx.cardview.widget.CardView>
 
-    <!-- Continue Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnContinue"
+    <!-- Buttons Container -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="Continuar"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:cornerRadius="12dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:layout_marginTop="16dp"
-        app:backgroundTint="@color/primary"
-        android:enabled="false" />
+        android:weightSum="2">
+
+        <!-- Logout Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Cerrar sesión"
+            android:textSize="14sp"
+            app:cornerRadius="12dp"
+            app:strokeColor="@color/primary"
+            app:strokeWidth="2dp"
+            android:textColor="@color/primary"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+        <!-- Continue Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnContinue"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Continuar"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"
+            app:backgroundTint="@color/primary"
+            android:enabled="false" />
+
+    </LinearLayout>
 
 </LinearLayout>

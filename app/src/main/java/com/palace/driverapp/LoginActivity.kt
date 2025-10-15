@@ -196,7 +196,6 @@ class LoginActivity : AppCompatActivity() {
 
         return isValid
     }
-
     private fun onLoginSuccess(driverCode: String) {
         animateSuccess()
 
@@ -204,7 +203,7 @@ class LoginActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             kotlinx.coroutines.delay(800)
-            // Cambiar de MainActivity a BusSelectionActivity
+            // Ir a BusSelectionActivity en lugar de MainActivity
             val intent = Intent(this@LoginActivity, BusSelectionActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }

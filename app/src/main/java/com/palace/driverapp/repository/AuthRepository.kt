@@ -7,6 +7,7 @@ import com.palace.driverapp.network.ApiConfig
 import com.palace.driverapp.network.DriverApiService
 import com.palace.driverapp.network.models.LoginRequest
 import com.palace.driverapp.network.models.LoginResponse
+import com.palace.driverapp.network.models.Vehicle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -19,7 +20,7 @@ class AuthRepository(private val context: Context) {
 
     private val apiService: DriverApiService = ApiConfig.createApiService { getToken() }
 
-    // ==================== GETTERS/SETTERS ====================
+    // ==================== GETTERS/SETTERS - AUTENTICACIÓN ====================
 
     fun getToken(): String? = prefs.getString("token", null)
 
@@ -27,7 +28,6 @@ class AuthRepository(private val context: Context) {
 
     fun getDriverCode(): String? = prefs.getString("driverCode", null)
 
-    // NUEVO: Obtener nombre completo del driver
     fun getDriverFullName(): String? {
         val firstName = prefs.getString("firstName", null)
         val lastNameP = prefs.getString("lastNameP", null)
@@ -69,12 +69,9 @@ class AuthRepository(private val context: Context) {
             putString("driverId", response.driver.id)
             putString("driverCode", response.driver.code)
             putString("driverStatus", response.driver.status)
-
-            // NUEVO: Guardar nombres del driver
             response.driver.firstName?.let { putString("firstName", it) }
             response.driver.lastNameP?.let { putString("lastNameP", it) }
             response.driver.lastNameM?.let { putString("lastNameM", it) }
-
             putString("sessionId", response.session.sessionId)
             putString("expiresAt", response.session.expiresAt)
             putLong("loginTime", System.currentTimeMillis())
@@ -84,43 +81,63 @@ class AuthRepository(private val context: Context) {
     }
 
     fun clearSession() {
-        prefs.edit().clear().apply()
-    }
-
-    // ==================== MÉTODOS PARA AUTOBÚS ====================
-
-    fun saveBusData(bus: Bus) {
         prefs.edit().apply {
-            putString("busId", bus.id)
-            putString("busNumber", bus.number)
-            putString("busPlate", bus.plate)
-            putString("busModel", bus.model)
-            putInt("busCapacity", bus.capacity)
-            putString("busStatus", bus.status)
+            remove("token")
+            remove("driverId")
+            remove("driverCode")
+            remove("driverStatus")
+            remove("firstName")
+            remove("lastNameP")
+            remove("lastNameM")
+            remove("sessionId")
+            remove("expiresAt")
+            remove("loginTime")
+            remove("isLoggedIn")
             apply()
         }
     }
 
-    fun getBusId(): String? = prefs.getString("busId", null)
+    // ==================== GETTERS/SETTERS - VEHÍCULOS ====================
 
-    fun getBusNumber(): String? = prefs.getString("busNumber", null)
-
-    fun getBusPlate(): String? = prefs.getString("busPlate", null)
-
-    fun getBusModel(): String? = prefs.getString("busModel", null)
-
-    fun getBusCapacity(): Int = prefs.getInt("busCapacity", 0)
-
-    fun getBusStatus(): String? = prefs.getString("busStatus", null)
-
-    fun clearBusData() {
+    fun saveVehicleData(vehicle: Vehicle) {
         prefs.edit().apply {
-            remove("busId")
-            remove("busNumber")
-            remove("busPlate")
-            remove("busModel")
-            remove("busCapacity")
-            remove("busStatus")
+            putInt("vehicleId", vehicle.id)
+            putString("vehicleCode", vehicle.code)
+            putString("vehiclePlate", vehicle.plate ?: "")
+            putString("vehicleModel", vehicle.model ?: "")
+            putString("vehicleMake", vehicle.make ?: "")
+            putInt("vehicleCapacity", vehicle.capacity ?: 0)
+            putString("vehicleStatus", vehicle.status)
+            apply()
+        }
+    }
+
+    fun getVehicleId(): Int? {
+        val id = prefs.getInt("vehicleId", -1)
+        return if (id == -1) null else id
+    }
+
+    fun getVehicleCode(): String? = prefs.getString("vehicleCode", null)
+
+    fun getVehiclePlate(): String? = prefs.getString("vehiclePlate", null)
+
+    fun getVehicleModel(): String? = prefs.getString("vehicleModel", null)
+
+    fun getVehicleMake(): String? = prefs.getString("vehicleMake", null)
+
+    fun getVehicleCapacity(): Int = prefs.getInt("vehicleCapacity", 0)
+
+    fun getVehicleStatus(): String? = prefs.getString("vehicleStatus", null)
+
+    fun clearVehicleData() {
+        prefs.edit().apply {
+            remove("vehicleId")
+            remove("vehicleCode")
+            remove("vehiclePlate")
+            remove("vehicleModel")
+            remove("vehicleMake")
+            remove("vehicleCapacity")
+            remove("vehicleStatus")
             apply()
         }
     }
@@ -141,20 +158,20 @@ class AuthRepository(private val context: Context) {
                 response.isSuccessful && response.body() != null -> {
                     val loginResponse = response.body()!!
                     saveLoginData(loginResponse)
-                    return@withContext Result.success(loginResponse)
+                    Result.success(loginResponse)
                 }
                 response.code() == 401 -> {
-                    return@withContext Result.failure(Exception("Credenciales inválidas"))
+                    Result.failure(Exception("Credenciales inválidas"))
                 }
                 response.code() == 403 -> {
-                    return@withContext Result.failure(Exception("Driver inactivo o suspendido"))
+                    Result.failure(Exception("Driver inactivo o suspendido"))
                 }
                 else -> {
-                    return@withContext Result.failure(Exception("Error en el servidor: ${response.code()}"))
+                    Result.failure(Exception("Error en el servidor: ${response.code()}"))
                 }
             }
         } catch (e: Exception) {
-            return@withContext Result.failure(Exception("Error de conexión: ${e.message}"))
+            Result.failure(Exception("Error de conexión: ${e.message}"))
         }
     }
 

@@ -14,8 +14,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.palace.driverapp.adapter.BusAdapter
-import com.palace.driverapp.network.models.Bus
+import com.palace.driverapp.network.models.Vehicle
 import com.palace.driverapp.repository.AuthRepository
 import com.palace.driverapp.repository.BusRepository
 import kotlinx.coroutines.launch
@@ -26,14 +27,17 @@ class BusSelectionActivity : AppCompatActivity() {
     private lateinit var tvSubtitle: TextView
     private lateinit var rvBuses: RecyclerView
     private lateinit var btnContinue: MaterialButton
+    private lateinit var btnLogout: MaterialButton
     private lateinit var cvProgressContainer: CardView
     private lateinit var llEmptyState: LinearLayout
+    private lateinit var tvEmptyMessage: TextView
+    private lateinit var tvEmptyDescription: TextView
 
     private lateinit var authRepository: AuthRepository
     private lateinit var busRepository: BusRepository
     private lateinit var busAdapter: BusAdapter
 
-    private var selectedBus: Bus? = null
+    private var selectedBus: Vehicle? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +45,18 @@ class BusSelectionActivity : AppCompatActivity() {
 
         authRepository = AuthRepository(this)
         busRepository = BusRepository(this)
+
+        // Validar sesión activa
+        if (!authRepository.isLoggedIn()) {
+            goToLogin()
+            return
+        }
+
+        // Si ya hay vehículo seleccionado, ir directo al mapa
+        if (authRepository.getVehicleId() != null) {
+            navigateToMainActivity()
+            return
+        }
 
         initializeViews()
         setupRecyclerView()
@@ -54,13 +70,16 @@ class BusSelectionActivity : AppCompatActivity() {
         tvSubtitle = findViewById(R.id.tvSubtitle)
         rvBuses = findViewById(R.id.rvBuses)
         btnContinue = findViewById(R.id.btnContinue)
+        btnLogout = findViewById(R.id.btnLogout)
         cvProgressContainer = findViewById(R.id.cvProgressContainer)
         llEmptyState = findViewById(R.id.llEmptyState)
+        tvEmptyMessage = findViewById(R.id.tvEmptyMessage)
+        tvEmptyDescription = findViewById(R.id.tvEmptyDescription)
     }
 
     private fun setupRecyclerView() {
-        busAdapter = BusAdapter(emptyList()) { selectedBus ->
-            this.selectedBus = selectedBus
+        busAdapter = BusAdapter(emptyList()) { vehicle ->
+            selectedBus = vehicle
             btnContinue.isEnabled = true
             animateButtonEnable()
         }
@@ -78,9 +97,13 @@ class BusSelectionActivity : AppCompatActivity() {
                 if (selectedBus != null) {
                     selectBusAndContinue(selectedBus!!)
                 } else {
-                    Toast.makeText(this@BusSelectionActivity, "Selecciona un autobús", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@BusSelectionActivity, "Selecciona un vehículo", Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+
+        btnLogout.setOnClickListener {
+            showLogoutConfirmation()
         }
     }
 
@@ -92,49 +115,52 @@ class BusSelectionActivity : AppCompatActivity() {
 
             showLoading(false)
 
-            result.onSuccess { buses ->
-                if (buses.isEmpty()) {
-                    showEmptyState()
+            result.onSuccess { vehicles ->
+                if (vehicles.isEmpty()) {
+                    showEmptyState("No hay vehículos disponibles", "Contacta al administrador para obtener acceso a un vehículo")
                 } else {
-                    busAdapter.updateBuses(buses)
+                    busAdapter.updateBuses(vehicles)
                     rvBuses.visibility = View.VISIBLE
                     llEmptyState.visibility = View.GONE
                 }
             }.onFailure { exception ->
-                Toast.makeText(
-                    this@BusSelectionActivity,
-                    "Error al cargar autobuses: ${exception.message}",
-                    Toast.LENGTH_LONG
-                ).show()
-                showEmptyState()
+                val errorMsg = exception.message ?: "Error desconocido"
+                showEmptyState("Error al cargar vehículos", errorMsg)
             }
         }
     }
 
-    private fun selectBusAndContinue(bus: Bus) {
+    private fun selectBusAndContinue(vehicle: Vehicle) {
         showLoading(true)
 
         lifecycleScope.launch {
-            val result = busRepository.selectBus(bus.id)
+            val result = busRepository.selectBus(vehicle.id)
 
             showLoading(false)
 
             result.onSuccess {
-                authRepository.saveBusData(bus)
+                authRepository.saveVehicleData(vehicle)
+                Toast.makeText(
+                    this@BusSelectionActivity,
+                    "Vehículo ${vehicle.code} seleccionado",
+                    Toast.LENGTH_SHORT
+                ).show()
                 navigateToMainActivity()
             }.onFailure { exception ->
                 Toast.makeText(
                     this@BusSelectionActivity,
-                    "Error al seleccionar autobús: ${exception.message}",
+                    "Error: ${exception.message}",
                     Toast.LENGTH_LONG
                 ).show()
             }
         }
     }
 
-    private fun showEmptyState() {
+    private fun showEmptyState(title: String, description: String) {
         rvBuses.visibility = View.GONE
         llEmptyState.visibility = View.VISIBLE
+        tvEmptyMessage.text = title
+        tvEmptyDescription.text = description
         btnContinue.isEnabled = false
     }
 
@@ -154,6 +180,7 @@ class BusSelectionActivity : AppCompatActivity() {
                 .start()
 
             btnContinue.isEnabled = false
+            btnLogout.isEnabled = false
             rvBuses.isEnabled = false
         } else {
             cvProgressContainer.animate()
@@ -167,6 +194,7 @@ class BusSelectionActivity : AppCompatActivity() {
                 .start()
 
             rvBuses.isEnabled = true
+            btnLogout.isEnabled = true
         }
     }
 
@@ -182,7 +210,6 @@ class BusSelectionActivity : AppCompatActivity() {
     private fun startEntranceAnimations() {
         tvTitle.alpha = 0f
         tvTitle.translationY = -20f
-
         tvTitle.animate()
             .alpha(1f)
             .translationY(0f)
@@ -192,7 +219,6 @@ class BusSelectionActivity : AppCompatActivity() {
 
         tvSubtitle.alpha = 0f
         tvSubtitle.translationY = -20f
-
         tvSubtitle.animate()
             .alpha(1f)
             .translationY(0f)
@@ -203,7 +229,6 @@ class BusSelectionActivity : AppCompatActivity() {
 
         rvBuses.alpha = 0f
         rvBuses.translationY = 50f
-
         rvBuses.animate()
             .alpha(1f)
             .translationY(0f)
@@ -211,6 +236,21 @@ class BusSelectionActivity : AppCompatActivity() {
             .setDuration(700)
             .setInterpolator(OvershootInterpolator())
             .start()
+    }
+
+    private fun showLogoutConfirmation() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Cerrar sesión")
+            .setMessage("¿Estás seguro que deseas cerrar sesión?")
+            .setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton("Cerrar sesión") { _, _ -> performLogout() }
+            .show()
+    }
+
+    private fun performLogout() {
+        authRepository.clearSession()
+        authRepository.clearVehicleData()
+        goToLogin()
     }
 
     private fun navigateToMainActivity() {
@@ -222,8 +262,15 @@ class BusSelectionActivity : AppCompatActivity() {
         finish()
     }
 
+    private fun goToLogin() {
+        val intent = Intent(this, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
+    }
+
     override fun onBackPressed() {
-        // Prevenir que el usuario regrese al login
-        moveTaskToBack(true)
+        showLogoutConfirmation()
     }
 }

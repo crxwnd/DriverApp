@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 // ==================== LOGIN ====================
 
 data class LoginRequest(
-    val login: String,      // code o phone
+    val login: String,
     val password: String,
     val deviceId: String
 )
@@ -19,15 +19,15 @@ data class LoginResponse(
 data class DriverInfo(
     val id: String,
     val code: String,
-    val status: String,      // "ACTIVE", "INACTIVE", "SUSPENDED"
-    val firstName: String?,  // NUEVO
-    val lastNameP: String?,  // NUEVO
-    val lastNameM: String?   // NUEVO
+    val status: String,
+    val firstName: String?,
+    val lastNameP: String?,
+    val lastNameM: String?
 )
 
 data class SessionInfo(
     val sessionId: String,
-    val expiresAt: String   // ISO timestamp
+    val expiresAt: String
 )
 
 // ==================== TELEMETRÍA ====================
@@ -36,7 +36,7 @@ data class TelemetryRequest(
     val driverId: String,
     val lat: Double,
     val lng: Double,
-    val timestamp: String,  // ISO timestamp
+    val timestamp: String,
     val accuracyM: Float?,
     val speedKph: Float?,
     val headingDeg: Float?,
@@ -46,9 +46,7 @@ data class TelemetryRequest(
 // ==================== DRIVERS EN VIVO ====================
 
 data class LiveDriversResponse(
-    val drivers: List<LiveDriver>?,  // ⬅️ Nullable
-    val count: Int?,                 // ⬅️ Opcional, lo devuelve el backend
-    val now: String?                 // ⬅️ Opcional, lo devuelve el backend
+    val drivers: List<LiveDriver>?
 )
 
 data class LiveDriver(
@@ -65,33 +63,51 @@ data class LiveDriver(
     val speedKph: Float?
 )
 
-// ==================== AUTOBUSES ====================
+// ==================== VEHÍCULOS (CORRECTO SEGÚN TU BD) ====================
 
-data class Bus(
+data class Vehicle(
+    val id: Int,
+    val code: String,
+    val plate: String?,
+    val make: String?,
+    val model: String?,
+    val year: Int?,
+    val color: String?,
+    val capacity: Int?,
+    val status: String,
+    val modelGlbUrl: String?,
+    val modelPreviewUrl: String?,
+    val modelScale: Float?,
+    val modelHeadingOffsetDeg: Float?,
+    val modelYOffsetM: Float?
+)
+
+data class GetVehiclesResponse(
+    val total: Int?,
+    val page: Int?,
+    val pageSize: Int?,
+    val items: List<Vehicle>?
+)
+
+data class DriverAttachVehicleDTO(
+    val vehicleId: Int?,
+    val vehicleCode: String?
+)
+
+data class AttachVehicleResponse(
+    val assignment: VehicleAssignment?,
+    val vehicle: Vehicle?,
+    val idempotent: Boolean?
+)
+
+data class VehicleAssignment(
     val id: String,
-    val number: String,           // Número de unidad (ej: "123")
-    val plate: String,            // Placa (ej: "ABC-1234")
-    val model: String,            // Modelo (ej: "Volvo 2024")
-    val capacity: Int,            // Capacidad de pasajeros
-    val status: String,           // "AVAILABLE", "MAINTENANCE", "IN_USE"
-    val companyId: String,
-    val assignedDriver: String?   // ID del driver asignado actualmente
-)
-
-data class GetBusesResponse(
-    val buses: List<Bus>,
-    val count: Int?
-)
-
-data class SelectBusRequest(
-    val busId: String,
-    val driverId: String
-)
-
-data class SelectBusResponse(
-    val success: Boolean,
-    val message: String,
-    val bus: Bus?
+    val driverId: String,
+    val vehicleId: Int,
+    val startsAt: String,
+    val endsAt: String?,
+    val active: Boolean,
+    val createdAt: String?
 )
 
 // ==================== ERRORES ====================

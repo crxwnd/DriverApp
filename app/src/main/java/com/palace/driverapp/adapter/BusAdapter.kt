@@ -11,11 +11,11 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.palace.driverapp.R
-import com.palace.driverapp.network.models.Bus
+import com.palace.driverapp.network.models.Vehicle
 
 class BusAdapter(
-    private var buses: List<Bus>,
-    private val onBusSelected: (Bus) -> Unit
+    private var buses: List<Vehicle>,
+    private val onBusSelected: (Vehicle) -> Unit
 ) : RecyclerView.Adapter<BusAdapter.BusViewHolder>() {
 
     private var selectedPosition: Int = -1
@@ -40,7 +40,7 @@ class BusAdapter(
 
     override fun getItemCount() = buses.size
 
-    fun updateBuses(newBuses: List<Bus>) {
+    fun updateBuses(newBuses: List<Vehicle>) {
         buses = newBuses
         selectedPosition = -1
         notifyDataSetChanged()
@@ -55,11 +55,11 @@ class BusAdapter(
         private val ivCheckmark: ImageView = itemView.findViewById(R.id.ivCheckmark)
         private val llDetails: LinearLayout = itemView.findViewById(R.id.llDetails)
 
-        fun bind(bus: Bus, isSelected: Boolean, onClick: () -> Unit) {
-            tvBusNumber.text = "Unidad #${bus.number}"
-            tvBusPlate.text = "Placa: ${bus.plate}"
-            tvBusModel.text = "Modelo: ${bus.model}"
-            tvBusCapacity.text = "Capacidad: ${bus.capacity} pasajeros"
+        fun bind(vehicle: Vehicle, isSelected: Boolean, onClick: () -> Unit) {
+            tvBusNumber.text = "Unidad ${vehicle.code}"
+            tvBusPlate.text = "Placa: ${vehicle.plate ?: "N/A"}"
+            tvBusModel.text = "Modelo: ${vehicle.model ?: vehicle.make ?: "N/A"}"
+            tvBusCapacity.text = "Capacidad: ${vehicle.capacity ?: 0} pasajeros"
 
             cvBus.setOnClickListener {
                 animateClick()

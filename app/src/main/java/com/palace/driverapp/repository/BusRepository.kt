@@ -3,8 +3,10 @@ package com.palace.driverapp.repository
 import android.content.Context
 import com.palace.driverapp.network.ApiConfig
 import com.palace.driverapp.network.DriverApiService
-import com.palace.driverapp.network.models.Bus
-import com.palace.driverapp.network.models.SelectBusRequest
+import com.palace.driverapp.network.models.AttachVehicleResponse
+import com.palace.driverapp.network.models.DriverAttachVehicleDTO
+import com.palace.driverapp.network.models.GetVehiclesResponse
+import com.palace.driverapp.network.models.Vehicle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -16,22 +18,23 @@ class BusRepository(context: Context) {
     }
 
     // ==================== OBTENER AUTOBUSES ====================
-
-    suspend fun getAvailableBuses(): Result<List<Bus>> = withContext(Dispatchers.IO) {
+    suspend fun getAvailableBuses(): Result<List<Vehicle>> = withContext(Dispatchers.IO) {
         try {
             val response = apiService.getAvailableBuses()
 
-            when {
-                response.isSuccessful && response.body() != null -> {
-                    val buses = response.body()!!.buses
-                    Result.success(buses)
+            return@withContext when {
+                response.isSuccessful -> {
+                    val body: GetVehiclesResponse? = response.body()
+                    // Si items es null devolvemos lista vacía (o podrías devolver null según tu preferencia)
+                    val items = body?.items ?: emptyList()
+                    Result.success(items)
                 }
                 response.code() == 401 -> {
                     authRepository.clearSession()
                     Result.failure(Exception("Sesión expirada"))
                 }
                 else -> {
-                    Result.failure(Exception("Error al obtener autobuses: ${response.code()}"))
+                    Result.failure(Exception("Error al obtener autobuses: ${response.code()} ${response.message()}"))
                 }
             }
         } catch (e: Exception) {
@@ -40,21 +43,26 @@ class BusRepository(context: Context) {
     }
 
     // ==================== SELECCIONAR AUTOBÚS ====================
-
-    suspend fun selectBus(busId: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun selectBus(vehicleId: Int): Result<Unit> = withContext(Dispatchers.IO) {
         try {
+            // validación de sesión / driverId (si lo necesitas)
             val driverId = authRepository.getDriverId()
-                ?: return@withContext Result.failure(Exception("No hay sesión activa"))
+            if (driverId == null) {
+                return@withContext Result.failure(Exception("No hay sesión activa"))
+            }
 
-            val request = SelectBusRequest(
-                busId = busId,
-                driverId = driverId
+            val request = DriverAttachVehicleDTO(
+                vehicleId = vehicleId,
+                vehicleCode = null
             )
 
             val response = apiService.selectBus(request)
 
-            when {
-                response.isSuccessful && response.body() != null -> {
+            return@withContext when {
+                response.isSuccessful -> {
+                    // opcional: comprobar body si quieres validar el contenido
+                    val body: AttachVehicleResponse? = response.body()
+                    // si necesitas alguna comprobación adicional sobre body, hazla aquí
                     Result.success(Unit)
                 }
                 response.code() == 401 -> {
@@ -62,7 +70,7 @@ class BusRepository(context: Context) {
                     Result.failure(Exception("Sesión expirada"))
                 }
                 else -> {
-                    Result.failure(Exception("Error al seleccionar autobús: ${response.code()}"))
+                    Result.failure(Exception("Error al seleccionar autobús: ${response.code()} ${response.message()}"))
                 }
             }
         } catch (e: Exception) {

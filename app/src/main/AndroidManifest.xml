@@ -23,7 +23,7 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
-        <!-- API Key de Google Maps (IMPORTANTE: Debes obtener tu propia API Key) -->
+        <!-- API Key de Google Maps -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDmmW-2RRCS4-yx0GK-8j2MkyNwunVivFE" />
@@ -39,6 +39,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Bus Selection Activity -->
+        <activity
+            android:name=".BusSelectionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DriverApp.NoActionBar" />
 
         <!-- Main Activity con Mapa y Navigation Drawer -->
         <activity

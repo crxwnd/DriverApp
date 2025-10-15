@@ -2,7 +2,10 @@ package com.palace.driverapp.network
 
 import com.palace.driverapp.network.models.*
 import retrofit2.Response
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface DriverApiService {
 
@@ -18,7 +21,7 @@ interface DriverApiService {
     /**
      * Enviar telemetría
      * POST /api/driver/telemetry
-     * Requiere token en el header (automático con AuthInterceptor)
+     * Requiere token en el header (AuthInterceptor)
      */
     @POST("api/driver/telemetry")
     suspend fun sendTelemetry(
@@ -28,26 +31,31 @@ interface DriverApiService {
     /**
      * Obtener drivers en vivo
      * GET /api/live/drivers?format=mobile
+     * Uso de @Query para mayor flexibilidad
      */
-    @GET("api/live/drivers?format=mobile")  // ⬅️ Agrega el parámetro aquí
-    suspend fun getLiveDrivers(): Response<LiveDriversResponse>
+    @GET("api/live/drivers")
+    suspend fun getLiveDrivers(
+        @Query("format") format: String = "mobile"
+    ): Response<LiveDriversResponse>
 
     /**
      * Obtener autobuses disponibles
-     * GET /api/driver/buses
+     * GET /api/driver/vehicles
      * Requiere token en el header
      */
-    @GET("api/driver/buses")
-    suspend fun getAvailableBuses(): Response<GetBusesResponse>
+    @GET("api/driver/vehicles")
+    suspend fun getAvailableBuses(): Response<GetVehiclesResponse>
 
     /**
-     * Seleccionar un autobús
+     * Seleccionar un autobús (adjuntar vehículo al driver)
      * POST /api/driver/buses/select
      * Requiere token en el header
+     *
+     * Usamos DriverAttachVehicleDTO y retornamos AttachVehicleResponse
+     * (ajusta la ruta si tu backend usa otra)
      */
     @POST("api/driver/buses/select")
     suspend fun selectBus(
-        @Body request: SelectBusRequest
-    ): Response<SelectBusResponse>
-
+        @Body request: DriverAttachVehicleDTO
+    ): Response<AttachVehicleResponse>
 }
