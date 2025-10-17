@@ -301,7 +301,9 @@ class LoginActivity : AppCompatActivity() {
 
     private fun checkExistingSession() {
         if (authRepository.isLoggedIn() && !authRepository.isSessionExpired()) {
-            startActivity(Intent(this, MainActivity::class.java))
+            // Si hay sesión válida, ir a BusSelectionActivity
+            // BusSelectionActivity decidirá si ir al mapa o mostrar la lista
+            startActivity(Intent(this, BusSelectionActivity::class.java))
             finish()
         }
     }

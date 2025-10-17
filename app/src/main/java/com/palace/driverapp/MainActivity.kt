@@ -721,6 +721,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
     private fun performLogout() {
         authRepository.clearSession()
+        authRepository.clearVehicleData()
         goToLogin()
     }
 
