@@ -318,6 +318,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             // ✅ Iniciar servicio de telemetría en segundo plano
             TelemetryService.start(this)
 
+            // ✅ RESTAURADO: Habilitar tracking en el mapa
+            enableLocationTracking()
+
             // Iniciar polling de otros drivers
             startPollingOtherDrivers()
         } else {
