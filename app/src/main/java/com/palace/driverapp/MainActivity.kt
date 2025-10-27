@@ -43,6 +43,8 @@ import com.palace.driverapp.repository.TelemetryRepository
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.palace.driverapp.service.TelemetryService
+
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
@@ -313,7 +315,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
     private fun checkLocationPermissions() {
         if (hasLocationPermissions()) {
-            enableLocationTracking()
+            // ✅ Iniciar servicio de telemetría en segundo plano
+            TelemetryService.start(this)
+
+            // Iniciar polling de otros drivers
             startPollingOtherDrivers()
         } else {
             requestLocationPermissions()
@@ -720,9 +725,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     }
 
     private fun performLogout() {
-        authRepository.clearSession()
-        authRepository.clearVehicleData()
-        goToLogin()
+        // ✅ Detener servicio de telemetría ANTES de cerrar sesión
+        TelemetryService.stop(this)
+
+        lifecycleScope.launch {
+            // Llamar al backend para desasignar vehículo
+            val result = authRepository.logout(logoutAll = false)
+
+            result.onSuccess {
+                android.util.Log.d("MainActivity", "✅ Logout exitoso")
+            }.onFailure { exception ->
+                android.util.Log.e("MainActivity", "❌ Error en logout: ${exception.message}")
+                // Continuar al login aunque falle (ya limpiamos local)
+            }
+
+            // Ir al login
+            goToLogin()
+        }
     }
 
     private fun goToLogin() {
@@ -774,5 +793,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         if (::locationCallback.isInitialized) {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
+        // ✅ NO detenemos el servicio aquí, porque queremos que siga corriendo
+        // Solo se detiene en logout
     }
 }

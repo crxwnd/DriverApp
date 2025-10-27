@@ -3,13 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.palace.driverapp">
 
-    <!-- Permisos necesarios -->
+    <!-- Permisos existentes -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Permisos para el mapa y GPS -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- ✅ NUEVOS: Permisos para servicio en segundo plano -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <!-- Para evitar que el sistema mate el servicio (Android 12+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Para que funcione con la pantalla apagada -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -28,7 +37,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDmmW-2RRCS4-yx0GK-8j2MkyNwunVivFE" />
 
-        <!-- Login Activity - Punto de entrada principal -->
+        <!-- Login Activity -->
         <activity
             android:name=".LoginActivity"
             android:exported="true"
@@ -46,11 +55,19 @@
             android:exported="false"
             android:theme="@style/Theme.DriverApp.NoActionBar" />
 
-        <!-- Main Activity con Mapa y Navigation Drawer -->
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="false"
             android:theme="@style/Theme.DriverApp.NoActionBar" />
+
+        <!-- ✅ NUEVO: Servicio de telemetría en segundo plano -->
+        <service
+            android:name=".service.TelemetryService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location"
+            tools:targetApi="q" />
 
     </application>
 

@@ -25,12 +25,12 @@ class BusRepository(context: Context) {
             return@withContext when {
                 response.isSuccessful -> {
                     val body: GetVehiclesResponse? = response.body()
-                    // Si items es null devolvemos lista vacía (o podrías devolver null según tu preferencia)
                     val items = body?.items ?: emptyList()
                     Result.success(items)
                 }
                 response.code() == 401 -> {
-                    authRepository.clearSession()
+                    // ✅ CORREGIDO: Usar logout() en lugar de clearSession()
+                    authRepository.logout()
                     Result.failure(Exception("Sesión expirada"))
                 }
                 else -> {
@@ -45,7 +45,6 @@ class BusRepository(context: Context) {
     // ==================== SELECCIONAR AUTOBÚS ====================
     suspend fun selectBus(vehicleId: Int): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // validación de sesión / driverId (si lo necesitas)
             val driverId = authRepository.getDriverId()
             if (driverId == null) {
                 return@withContext Result.failure(Exception("No hay sesión activa"))
@@ -60,13 +59,11 @@ class BusRepository(context: Context) {
 
             return@withContext when {
                 response.isSuccessful -> {
-                    // opcional: comprobar body si quieres validar el contenido
-                    val body: AttachVehicleResponse? = response.body()
-                    // si necesitas alguna comprobación adicional sobre body, hazla aquí
                     Result.success(Unit)
                 }
                 response.code() == 401 -> {
-                    authRepository.clearSession()
+                    // ✅ CORREGIDO: Usar logout() en lugar de clearSession()
+                    authRepository.logout()
                     Result.failure(Exception("Sesión expirada"))
                 }
                 else -> {

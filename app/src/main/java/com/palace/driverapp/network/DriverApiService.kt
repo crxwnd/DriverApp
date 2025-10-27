@@ -19,6 +19,16 @@ interface DriverApiService {
     ): Response<LoginResponse>
 
     /**
+     * ✅ NUEVO: Logout del driver
+     * POST /api/driver/auth/logout
+     * @param logoutAll Si es true, cierra todas las sesiones del driver
+     */
+    @POST("api/driver/auth/logout")
+    suspend fun logout(
+        @Query("all") logoutAll: Boolean = false
+    ): Response<Unit>
+
+    /**
      * Enviar telemetría
      * POST /api/driver/telemetry
      * Requiere token en el header (AuthInterceptor)
@@ -51,10 +61,13 @@ interface DriverApiService {
      * POST /api/driver/buses/select
      * Requiere token en el header
      *
-     * Usamos DriverAttachVehicleDTO y retornamos AttachVehicleResponse
-     * (ajusta la ruta si tu backend usa otra)
+     * IMPORTANTE: Según tu backend, la ruta correcta puede ser:
+     * - /api/driver/vehicle/attach (si usas el endpoint de attach)
+     * - /api/driver/buses/select (ruta personalizada)
+     *
+     * Ajusta según tu backend real
      */
-    @POST("api/driver/buses/select")
+    @POST("api/driver/vehicle/attach")
     suspend fun selectBus(
         @Body request: DriverAttachVehicleDTO
     ): Response<AttachVehicleResponse>

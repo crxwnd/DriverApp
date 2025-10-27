@@ -247,10 +247,36 @@ class BusSelectionActivity : AppCompatActivity() {
             .show()
     }
 
+    // ✅ ACTUALIZADO: Ahora llama al backend antes de limpiar
     private fun performLogout() {
-        authRepository.clearSession()
-        authRepository.clearVehicleData()
-        goToLogin()
+        showLoading(true)
+
+        lifecycleScope.launch {
+            // Llamar al backend para desasignar vehículo y cerrar sesión
+            val result = authRepository.logout(logoutAll = false)
+
+            showLoading(false)
+
+            result.onSuccess {
+                android.util.Log.d("BusSelection", "✅ Logout exitoso")
+                Toast.makeText(
+                    this@BusSelectionActivity,
+                    "Sesión cerrada correctamente",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }.onFailure { exception ->
+                android.util.Log.e("BusSelection", "❌ Error en logout: ${exception.message}")
+                // No mostramos error al usuario, ya limpiamos local
+                Toast.makeText(
+                    this@BusSelectionActivity,
+                    "Sesión cerrada",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            // Ir al login (ya limpiamos en AuthRepository.logout())
+            goToLogin()
+        }
     }
 
     private fun navigateToMainActivity() {

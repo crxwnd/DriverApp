@@ -1,3 +1,13 @@
+// ⚠️ PRIMERO: Agrega este método a DriverApiService.kt
+
+// En DriverApiService.kt agregar:
+/*
+@POST("api/driver/auth/logout")
+suspend fun logout(
+    @Query("all") logoutAll: Boolean = false
+): Response<Unit>
+*/
+
 package com.palace.driverapp.repository
 
 import android.content.Context
@@ -23,9 +33,7 @@ class AuthRepository(private val context: Context) {
     // ==================== GETTERS/SETTERS - AUTENTICACIÓN ====================
 
     fun getToken(): String? = prefs.getString("token", null)
-
     fun getDriverId(): String? = prefs.getString("driverId", null)
-
     fun getDriverCode(): String? = prefs.getString("driverCode", null)
 
     fun getDriverFullName(): String? {
@@ -47,7 +55,6 @@ class AuthRepository(private val context: Context) {
     }
 
     fun getDriverFirstName(): String? = prefs.getString("firstName", null)
-
     fun isLoggedIn(): Boolean = getToken() != null && getDriverId() != null
 
     fun getDeviceId(): String {
@@ -80,7 +87,8 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    fun clearSession() {
+    // ⚠️ NUEVO: Limpia solo SharedPreferences (para uso interno)
+    private fun clearSessionLocal() {
         prefs.edit().apply {
             remove("token")
             remove("driverId")
@@ -118,15 +126,10 @@ class AuthRepository(private val context: Context) {
     }
 
     fun getVehicleCode(): String? = prefs.getString("vehicleCode", null)
-
     fun getVehiclePlate(): String? = prefs.getString("vehiclePlate", null)
-
     fun getVehicleModel(): String? = prefs.getString("vehicleModel", null)
-
     fun getVehicleMake(): String? = prefs.getString("vehicleMake", null)
-
     fun getVehicleCapacity(): Int = prefs.getInt("vehicleCapacity", 0)
-
     fun getVehicleStatus(): String? = prefs.getString("vehicleStatus", null)
 
     fun clearVehicleData() {
@@ -175,6 +178,58 @@ class AuthRepository(private val context: Context) {
         }
     }
 
+    // ✅ NUEVO: Logout real al backend
+    suspend fun logout(logoutAll: Boolean = false): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val token = getToken()
+
+            // Si no hay token, solo limpiamos local
+            if (token == null) {
+                clearSessionLocal()
+                clearVehicleData()
+                return@withContext Result.success(Unit)
+            }
+
+            // Llamar al backend para desasignar vehículo y cerrar sesión
+            val response = apiService.logout(logoutAll)
+
+            when {
+                response.isSuccessful -> {
+                    // Limpiar datos locales
+                    clearSessionLocal()
+                    clearVehicleData()
+                    Result.success(Unit)
+                }
+                response.code() == 401 -> {
+                    // Token inválido/expirado, limpiar igual
+                    clearSessionLocal()
+                    clearVehicleData()
+                    Result.success(Unit)
+                }
+                else -> {
+                    // Error en el servidor, pero limpiamos local de todos modos
+                    android.util.Log.e("AuthRepository", "Error en logout: ${response.code()}")
+                    clearSessionLocal()
+                    clearVehicleData()
+                    Result.failure(Exception("Error al cerrar sesión: ${response.code()}"))
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "Excepción en logout", e)
+            // Limpiar local aunque falle la petición
+            clearSessionLocal()
+            clearVehicleData()
+            Result.failure(Exception("Error de red: ${e.message}"))
+        }
+    }
+
+    // ✅ NUEVO: Versión síncrona para casos de emergencia (401)
+    // Solo limpia local, NO llama al backend
+    fun clearSessionQuick() {
+        clearSessionLocal()
+        clearVehicleData()
+    }
+
     // ==================== VALIDACIÓN DE SESIÓN ====================
 
     fun isSessionExpired(): Boolean {
@@ -193,7 +248,8 @@ class AuthRepository(private val context: Context) {
 
     suspend fun renewSessionIfNeeded(): Boolean {
         if (!isSessionExpired()) return true
-        clearSession()
+        clearSessionLocal()
+        clearVehicleData()
         return false
     }
 }
