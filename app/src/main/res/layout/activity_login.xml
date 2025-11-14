@@ -64,14 +64,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Card contenedor de los campos -->
+        <!-- Card contenedor de los campos con efecto liquid-glass -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cvLoginForm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="40dp"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="4dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="8dp"
             app:cardBackgroundColor="@color/white"
             app:layout_constraintTop_toBottomOf="@id/tvSubtitle"
             app:layout_constraintStart_toStartOf="parent"
@@ -256,72 +256,20 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Información adicional al final -->
-        <LinearLayout
-            android:id="@+id/llFooterInfo"
-            android:layout_width="match_parent"
+        <!-- Versión de la app (footer simplificado) -->
+        <TextView
+            android:id="@+id/tvVersion"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
+            android:text="Versión 10.12.2025"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:alpha="0.7"
             android:layout_marginTop="32dp"
             app:layout_constraintTop_toBottomOf="@id/cvLoginForm"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <!-- Credenciales de prueba -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="#E3F2FD"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔐 Credenciales de Prueba"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#1976D2"
-                        android:layout_marginBottom="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Usuario: admin"
-                        android:textSize="11sp"
-                        android:textColor="#1976D2" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Contraseña: 123456"
-                        android:textSize="11sp"
-                        android:textColor="#1976D2" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Versión de la app -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Versión 10.12.2025"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:alpha="0.7" />
-
-        </LinearLayout>
+            app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

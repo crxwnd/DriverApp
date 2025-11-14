@@ -40,7 +40,6 @@ import com.google.android.material.navigation.NavigationView
 import com.palace.driverapp.network.models.LiveDriver
 import com.palace.driverapp.repository.AuthRepository
 import com.palace.driverapp.repository.TelemetryRepository
-import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.palace.driverapp.service.TelemetryService
@@ -71,11 +70,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     private lateinit var navigationView: NavigationView
     private lateinit var toggle: ActionBarDrawerToggle
 
-    // Views del header
+    // Views del header (SIN imgDriverProfile)
     private lateinit var headerView: View
     private lateinit var tvDriverName: TextView
     private lateinit var tvDriverEmail: TextView
-    private lateinit var imgDriverProfile: CircleImageView
 
     // Permisos
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
@@ -182,10 +180,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
         navigationView.setNavigationItemSelectedListener(this)
 
+        // ✅ CAMBIO: Sin inicialización de imgDriverProfile
         headerView = navigationView.getHeaderView(0)
         tvDriverName = headerView.findViewById(R.id.tvDriverName)
         tvDriverEmail = headerView.findViewById(R.id.tvDriverEmail)
-        imgDriverProfile = headerView.findViewById(R.id.imgDriverProfile)
 
         val imgCompanyLogo = headerView.findViewById<ImageView>(R.id.imgCompanyLogo)
         animateCompanyLogo(imgCompanyLogo)
@@ -210,18 +208,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         }
     }
 
+    // ✅ CAMBIO: Función animateDrawerContent sin animación de foto
     private fun animateDrawerContent() {
-        imgDriverProfile.scaleX = 0.8f
-        imgDriverProfile.scaleY = 0.8f
-        imgDriverProfile.alpha = 0.5f
-
-        imgDriverProfile.animate()
-            .scaleX(1f)
-            .scaleY(1f)
-            .alpha(1f)
-            .setDuration(400)
-            .setInterpolator(OvershootInterpolator())
-            .start()
+        // Animación eliminada: imgDriverProfile (ya no existe)
 
         tvDriverName.translationY = -20f
         tvDriverName.alpha = 0f

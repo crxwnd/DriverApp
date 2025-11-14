@@ -2,50 +2,31 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="300dp"
+    android:layout_height="280dp"
     android:background="@drawable/drawer_header_background"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="24dp"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-    <!-- Logo de la empresa con animación -->
-    <androidx.cardview.widget.CardView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        app:cardCornerRadius="30dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/white"
-        android:layout_marginBottom="16dp">
-
-        <ImageView
-            android:id="@+id/imgCompanyLogo"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_company_logo"
-            android:contentDescription="Logo de la empresa"
-            android:scaleType="fitCenter"
-            app:tint="@color/primary" />
-
-    </androidx.cardview.widget.CardView>
-
-    <!-- Foto del driver con borde elegante -->
+    <!-- Logo de Palace centrado con animación -->
     <androidx.cardview.widget.CardView
         android:layout_width="100dp"
         android:layout_height="100dp"
         app:cardCornerRadius="50dp"
-        app:cardElevation="6dp"
-        app:cardBackgroundColor="@color/white">
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="@color/white"
+        android:layout_marginBottom="24dp">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/imgDriverProfile"
-            android:layout_width="94dp"
-            android:layout_height="94dp"
+        <ImageView
+            android:id="@+id/imgCompanyLogo"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_default_profile"
-            app:civ_border_width="3dp"
-            app:civ_border_color="@color/white" />
+            android:src="@drawable/ic_company_logo"
+            android:contentDescription="Logo de Palace"
+            android:scaleType="fitCenter"
+            app:tint="@color/primary" />
 
     </androidx.cardview.widget.CardView>
 
@@ -53,7 +34,7 @@
     <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginBottom="8dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp"
         app:cardBackgroundColor="#4CAF50">
@@ -62,31 +43,32 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="7dp"
-            android:paddingBottom="4dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
             android:gravity="center">
 
             <View
                 android:layout_width="8dp"
                 android:layout_height="8dp"
                 android:background="@drawable/status_indicator"
-                android:layout_marginEnd="4dp" />
+                android:layout_marginEnd="6dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="En línea"
-                android:textSize="10sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:letterSpacing="0.03" />
 
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
 
-    <!-- Nombre del driver -->
+    <!-- Nombre del driver (obtenido del API) -->
     <TextView
         android:id="@+id/tvDriverName"
         android:layout_width="match_parent"
@@ -94,29 +76,31 @@
         android:text="Nombre del Driver"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textColor="@color/white"
-        android:textSize="20sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginTop="1dp"
-        android:maxLines="1"
+        android:layout_marginTop="4dp"
+        android:maxLines="2"
         android:ellipsize="end"
         android:shadowColor="#40000000"
         android:shadowDx="0"
         android:shadowDy="2"
-        android:shadowRadius="4" />
+        android:shadowRadius="4"
+        android:lineSpacingExtra="2dp" />
 
-    <!-- Email/Usuario del driver -->
+    <!-- Código del driver -->
     <TextView
         android:id="@+id/tvDriverEmail"
-        android:layout_width="294dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:alpha="0.9"
+        android:layout_marginTop="6dp"
+        android:alpha="0.95"
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="1"
-        android:text="driver@empresa.com"
+        android:text="Código"
         android:textColor="@color/white"
-        android:textSize="14sp" />
+        android:textSize="14sp"
+        android:letterSpacing="0.05" />
 
 </LinearLayout>

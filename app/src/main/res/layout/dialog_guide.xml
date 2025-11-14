@@ -5,19 +5,20 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="24dp"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="8dp">
+    app:cardCornerRadius="24dp"
+    app:cardElevation="12dp"
+    app:cardBackgroundColor="@android:color/white">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="500dp">
+        android:maxHeight="550dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp"
+            android:padding="28dp"
             android:background="@android:color/white">
 
             <!-- Icono animado de guía -->
@@ -27,7 +28,7 @@
                 android:layout_gravity="center"
                 app:cardCornerRadius="40dp"
                 app:cardElevation="4dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="20dp"
                 app:cardBackgroundColor="#FFF3E0">
 
                 <ImageView
@@ -46,10 +47,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Guía de Uso"
-                android:textSize="24sp"
+                android:textSize="26sp"
                 android:textStyle="bold"
                 android:textColor="#212121"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:letterSpacing="0.01" />
 
             <!-- Subtítulo -->
             <TextView
@@ -57,37 +59,38 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Aprende a usar la aplicación"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textColor="#757575"
-                android:layout_marginBottom="24dp" />
+                android:layout_marginBottom="28dp"
+                android:lineHeight="22dp" />
 
             <!-- Separador -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="#E0E0E0"
-                android:layout_marginBottom="20dp" />
+                android:layout_marginBottom="24dp" />
 
             <!-- Sección 1: Mapa -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardBackgroundColor="#FAFAFA">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <!-- Icono -->
                     <androidx.cardview.widget.CardView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        app:cardCornerRadius="24dp"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        app:cardCornerRadius="26dp"
                         app:cardElevation="0dp"
                         app:cardBackgroundColor="#E3F2FD">
 
@@ -96,7 +99,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:text="🗺️"
-                            android:textSize="24sp" />
+                            android:textSize="26sp" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -106,24 +109,26 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:layout_marginStart="16dp">
+                        android:layout_marginStart="18dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Visualización del Mapa"
-                            android:textSize="16sp"
+                            android:textSize="17sp"
                             android:textStyle="bold"
                             android:textColor="#212121"
-                            android:layout_marginBottom="8dp" />
+                            android:layout_marginBottom="10dp"
+                            android:letterSpacing="0.01" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="• Tu ubicación se muestra con un punto azul\n• La ruta asignada aparece en color verde"
-                            android:textSize="13sp"
+                            android:textSize="14sp"
                             android:textColor="#616161"
-                            android:lineSpacingExtra="4dp" />
+                            android:lineSpacingMultiplier="1.5"
+                            android:letterSpacing="0.01" />
 
                     </LinearLayout>
 
@@ -135,22 +140,22 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardBackgroundColor="#FAFAFA">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <!-- Icono -->
                     <androidx.cardview.widget.CardView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        app:cardCornerRadius="24dp"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        app:cardCornerRadius="26dp"
                         app:cardElevation="0dp"
                         app:cardBackgroundColor="#E8F5E9">
 
@@ -159,7 +164,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:text="🧭"
-                            android:textSize="24sp" />
+                            android:textSize="26sp" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -169,24 +174,26 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:layout_marginStart="16dp">
+                        android:layout_marginStart="18dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Navegación"
-                            android:textSize="16sp"
+                            android:textSize="17sp"
                             android:textStyle="bold"
                             android:textColor="#212121"
-                            android:layout_marginBottom="8dp" />
+                            android:layout_marginBottom="10dp"
+                            android:letterSpacing="0.01" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="• Usa los controles de zoom para acercar/alejar\n• Desliza para moverte por el mapa"
-                            android:textSize="13sp"
+                            android:textSize="14sp"
                             android:textColor="#616161"
-                            android:lineSpacingExtra="4dp" />
+                            android:lineSpacingMultiplier="1.5"
+                            android:letterSpacing="0.01" />
 
                     </LinearLayout>
 
@@ -198,22 +205,22 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardBackgroundColor="#FAFAFA">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <!-- Icono -->
                     <androidx.cardview.widget.CardView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        app:cardCornerRadius="24dp"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        app:cardCornerRadius="26dp"
                         app:cardElevation="0dp"
                         app:cardBackgroundColor="#FFF3E0">
 
@@ -222,7 +229,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:text="⏱️"
-                            android:textSize="24sp" />
+                            android:textSize="26sp" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -232,24 +239,26 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:layout_marginStart="16dp">
+                        android:layout_marginStart="18dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Cronómetro"
-                            android:textSize="16sp"
+                            android:textSize="17sp"
                             android:textStyle="bold"
                             android:textColor="#212121"
-                            android:layout_marginBottom="8dp" />
+                            android:layout_marginBottom="10dp"
+                            android:letterSpacing="0.01" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="• Se inicia automáticamente al comenzar tu ruta\n• Pausar/Reanudar con el botón correspondiente"
-                            android:textSize="13sp"
+                            android:textSize="14sp"
                             android:textColor="#616161"
-                            android:lineSpacingExtra="4dp" />
+                            android:lineSpacingMultiplier="1.5"
+                            android:letterSpacing="0.01" />
 
                     </LinearLayout>
 
@@ -261,22 +270,22 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="24dp"
                 app:cardBackgroundColor="#FAFAFA">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <!-- Icono -->
                     <androidx.cardview.widget.CardView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        app:cardCornerRadius="24dp"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        app:cardCornerRadius="26dp"
                         app:cardElevation="0dp"
                         app:cardBackgroundColor="#FFEBEE">
 
@@ -285,7 +294,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:text="📝"
-                            android:textSize="24sp" />
+                            android:textSize="26sp" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -295,24 +304,26 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:layout_marginStart="16dp">
+                        android:layout_marginStart="18dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Reportes"
-                            android:textSize="16sp"
+                            android:textSize="17sp"
                             android:textStyle="bold"
                             android:textColor="#212121"
-                            android:layout_marginBottom="8dp" />
+                            android:layout_marginBottom="10dp"
+                            android:letterSpacing="0.01" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="• Usa el botón de reporte para informar incidencias"
-                            android:textSize="13sp"
+                            android:textSize="14sp"
                             android:textColor="#616161"
-                            android:lineSpacingExtra="4dp" />
+                            android:lineSpacingMultiplier="1.5"
+                            android:letterSpacing="0.01" />
 
                     </LinearLayout>
 
@@ -324,12 +335,13 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnClose"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="58dp"
                 android:text="Entendido"
                 android:textAllCaps="false"
-                android:textSize="16sp"
+                android:textSize="17sp"
                 android:textStyle="bold"
-                app:cornerRadius="28dp"
+                android:letterSpacing="0.02"
+                app:cornerRadius="29dp"
                 android:backgroundTint="#254D6E" />
 
         </LinearLayout>
