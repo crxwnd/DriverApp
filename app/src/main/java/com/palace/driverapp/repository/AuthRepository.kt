@@ -1,13 +1,3 @@
-// ⚠️ PRIMERO: Agrega este método a DriverApiService.kt
-
-// En DriverApiService.kt agregar:
-/*
-@POST("api/driver/auth/logout")
-suspend fun logout(
-    @Query("all") logoutAll: Boolean = false
-): Response<Unit>
-*/
-
 package com.palace.driverapp.repository
 
 import android.content.Context
@@ -232,7 +222,7 @@ class AuthRepository(private val context: Context) {
 
     // ==================== VALIDACIÓN DE SESIÓN ====================
 
-    fun isSessionExpired(): Boolean {
+    fun isSessionExpiredLocally(): Boolean {
         val expiresAtStr = prefs.getString("expiresAt", null) ?: return true
 
         return try {
@@ -246,10 +236,110 @@ class AuthRepository(private val context: Context) {
         }
     }
 
+    // Alias para compatibilidad
+    fun isSessionExpired(): Boolean = isSessionExpiredLocally()
+
+    /**
+     * ✅ CRÍTICO: Validar sesión con el backend
+     *
+     * Esta función DEBE llamarse al arrancar la app o al volver del background.
+     * NO confiar solo en el token local - el backend puede haberlo invalidado.
+     *
+     * @return SessionValidationResult indicando si la sesión es válida y si hay vehículo asignado
+     */
+    suspend fun validateSessionWithBackend(): SessionValidationResult = withContext(Dispatchers.IO) {
+        // 1) Si no hay token local, no hay nada que validar
+        val token = getToken()
+        if (token == null) {
+            return@withContext SessionValidationResult(
+                isValid = false,
+                hasVehicle = false,
+                reason = "No hay token local"
+            )
+        }
+
+        // 2) Llamar al backend para verificar si la sesión sigue viva
+        try {
+            val response = apiService.getCurrentDriver()
+
+            when {
+                response.isSuccessful && response.body() != null -> {
+                    val body = response.body()!!
+
+                    // Actualizar datos locales si el backend envía info actualizada
+                    body.driver?.let { driver ->
+                        prefs.edit().apply {
+                            putString("driverId", driver.id)
+                            putString("driverCode", driver.code)
+                            putString("driverStatus", driver.status)
+                            driver.firstName?.let { putString("firstName", it) }
+                            driver.lastNameP?.let { putString("lastNameP", it) }
+                            driver.lastNameM?.let { putString("lastNameM", it) }
+                            apply()
+                        }
+                    }
+
+                    // Sincronizar datos del vehículo
+                    val hasVehicle = body.vehicle != null
+                    if (hasVehicle) {
+                        body.vehicle?.let { saveVehicleData(it) }
+                    } else {
+                        // El backend dice que no hay vehículo, limpiar local
+                        clearVehicleData()
+                    }
+
+                    SessionValidationResult(
+                        isValid = true,
+                        hasVehicle = hasVehicle,
+                        reason = null
+                    )
+                }
+                response.code() == 401 || response.code() == 403 -> {
+                    // Sesión expirada o inválida - limpiar todo
+                    android.util.Log.w("AuthRepository", "Sesión inválida: ${response.code()}")
+                    clearSessionLocal()
+                    clearVehicleData()
+
+                    SessionValidationResult(
+                        isValid = false,
+                        hasVehicle = false,
+                        reason = "Sesión expirada"
+                    )
+                }
+                else -> {
+                    // Error del servidor - mantener sesión local por ahora
+                    android.util.Log.e("AuthRepository", "Error validando sesión: ${response.code()}")
+                    SessionValidationResult(
+                        isValid = true, // Dar beneficio de la duda
+                        hasVehicle = getVehicleId() != null,
+                        reason = "Error de servidor: ${response.code()}"
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "Excepción validando sesión", e)
+            // Error de red - mantener sesión local
+            SessionValidationResult(
+                isValid = true, // Dar beneficio de la duda (podría ser problema de red)
+                hasVehicle = getVehicleId() != null,
+                reason = "Error de red: ${e.message}"
+            )
+        }
+    }
+
     suspend fun renewSessionIfNeeded(): Boolean {
-        if (!isSessionExpired()) return true
+        if (!isSessionExpiredLocally()) return true
         clearSessionLocal()
         clearVehicleData()
         return false
     }
 }
+
+/**
+ * Resultado de validación de sesión con el backend
+ */
+data class SessionValidationResult(
+    val isValid: Boolean,
+    val hasVehicle: Boolean,
+    val reason: String?
+)

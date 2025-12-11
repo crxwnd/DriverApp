@@ -110,6 +110,23 @@ data class VehicleAssignment(
     val createdAt: String?
 )
 
+// ==================== DETACH VEHÍCULO ====================
+
+data class DetachVehicleResponse(
+    val ok: Boolean,
+    val detachedVehicleId: Int?,
+    val driverActivity: String?,
+    val error: String?
+)
+
+// ==================== VERIFICAR SESIÓN / ESTADO ACTUAL ====================
+
+data class CurrentDriverResponse(
+    val driver: DriverInfo?,
+    val vehicle: Vehicle?,
+    val assignment: VehicleAssignment?
+)
+
 // ==================== ERRORES ====================
 
 data class ErrorResponse(

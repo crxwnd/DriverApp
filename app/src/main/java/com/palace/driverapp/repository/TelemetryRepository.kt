@@ -43,9 +43,9 @@ class TelemetryRepository(context: Context) {
                     Result.success(Unit)
                 }
                 response.code() == 401 -> {
-                    // Token expirado, limpiar sesión
-                    authRepository.logout()
-                    Result.failure(Exception("Sesión expirada"))
+                    // Token expirado - limpiar sesión localmente (rápido, sin llamar al backend)
+                    authRepository.clearSessionQuick()
+                    Result.failure(SessionExpiredException("Sesión expirada"))
                 }
                 else -> {
                     Result.failure(Exception("Error al enviar telemetría: ${response.code()}"))

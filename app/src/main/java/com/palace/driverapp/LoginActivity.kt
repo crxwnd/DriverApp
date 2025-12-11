@@ -299,12 +299,51 @@ class LoginActivity : AppCompatActivity() {
         btnLogin.text = "¡Bienvenido!"
     }
 
+    /**
+     * ✅ CRÍTICO: Validar sesión con el backend, NO solo localmente
+     *
+     * Antes: Solo verificaba si había token local y si no estaba expirado localmente.
+     * Problema: Si el backend invalidó la sesión (corte, logout desde otro dispositivo),
+     *           la app seguía mostrando el mapa porque confiaba en el estado local.
+     *
+     * Ahora: Llama al backend para verificar si la sesión sigue siendo válida.
+     */
     private fun checkExistingSession() {
-        if (authRepository.isLoggedIn() && !authRepository.isSessionExpired()) {
-            // Si hay sesión válida, ir a BusSelectionActivity
-            // BusSelectionActivity decidirá si ir al mapa o mostrar la lista
-            startActivity(Intent(this, BusSelectionActivity::class.java))
-            finish()
+        // 1) Verificación rápida local: si no hay token, no hacer nada
+        if (!authRepository.isLoggedIn()) {
+            return
+        }
+
+        // 2) Mostrar loading mientras validamos con el backend
+        showLoading(true)
+
+        lifecycleScope.launch {
+            val result = authRepository.validateSessionWithBackend()
+
+            showLoading(false)
+
+            if (result.isValid) {
+                // Sesión válida - decidir a dónde ir
+                if (result.hasVehicle) {
+                    // Tiene vehículo asignado → ir directo al mapa
+                    val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                } else {
+                    // No tiene vehículo → ir a selección
+                    val intent = Intent(this@LoginActivity, BusSelectionActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                }
+                finish()
+            } else {
+                // Sesión inválida - mostrar el formulario de login
+                // El AuthRepository ya limpió los datos locales
+                android.util.Log.d("LoginActivity", "Sesión inválida: ${result.reason}")
+                // No hacer nada, ya estamos en la pantalla de login
+            }
         }
     }
 }
