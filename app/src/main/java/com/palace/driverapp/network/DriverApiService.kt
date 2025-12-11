@@ -57,18 +57,43 @@ interface DriverApiService {
     suspend fun getAvailableBuses(): Response<GetVehiclesResponse>
 
     /**
-     * Seleccionar un autobús (adjuntar vehículo al driver)
-     * POST /api/driver/buses/select
+     * Asignar vehículo al driver (attach)
+     * POST /api/driver/vehicle/attach
      * Requiere token en el header
      *
-     * IMPORTANTE: Según tu backend, la ruta correcta puede ser:
-     * - /api/driver/vehicle/attach (si usas el endpoint de attach)
-     * - /api/driver/buses/select (ruta personalizada)
-     *
-     * Ajusta según tu backend real
+     * Respuestas:
+     * - 201: Asignación creada exitosamente
+     * - 200: Idempotente (ya existía la asignación)
+     * - 400: JSON inválido
+     * - 403: Driver no elegible (INACTIVE/SUSPENDED)
+     * - 404: Vehículo no encontrado
+     * - 409: Vehículo no disponible (INACTIVE/MAINTENANCE)
      */
     @POST("api/driver/vehicle/attach")
-    suspend fun selectBus(
+    suspend fun attachVehicle(
         @Body request: DriverAttachVehicleDTO
     ): Response<AttachVehicleResponse>
+
+    /**
+     * Desasignar vehículo actual del driver (detach)
+     * POST /api/driver/vehicle/detach
+     * Requiere token en el header
+     * NO cierra sesión, solo desvincula el vehículo
+     *
+     * Respuestas:
+     * - 200: Desasignación exitosa
+     * - 401: No autenticado (sesión inválida/expirada)
+     */
+    @POST("api/driver/vehicle/detach")
+    suspend fun detachVehicle(): Response<DetachVehicleResponse>
+
+    /**
+     * Obtener estado actual del driver (para validar sesión al inicio)
+     * GET /api/driver/me
+     * Requiere token en el header
+     *
+     * Si devuelve 401, la sesión ha expirado y hay que ir a login
+     */
+    @GET("api/driver/me")
+    suspend fun getCurrentDriver(): Response<CurrentDriverResponse>
 }

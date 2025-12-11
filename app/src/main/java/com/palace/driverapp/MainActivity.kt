@@ -39,10 +39,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.palace.driverapp.network.models.LiveDriver
 import com.palace.driverapp.repository.AuthRepository
+import com.palace.driverapp.repository.BusRepository
+import com.palace.driverapp.repository.SessionExpiredException
 import com.palace.driverapp.repository.TelemetryRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.palace.driverapp.service.TelemetryService
+import androidx.cardview.widget.CardView
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
@@ -64,6 +67,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     // Repositories
     private lateinit var authRepository: AuthRepository
     private lateinit var telemetryRepository: TelemetryRepository
+    private lateinit var busRepository: BusRepository
+
+    // Vistas de vehículo asignado
+    private lateinit var cvVehicleInfo: CardView
+    private lateinit var tvVehicleCode: TextView
+    private lateinit var btnDetachVehicle: MaterialButton
 
     // Navigation Drawer
     private lateinit var drawerLayout: DrawerLayout
@@ -94,6 +103,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         // Inicializar repositories
         authRepository = AuthRepository(this)
         telemetryRepository = TelemetryRepository(this)
+        busRepository = BusRepository(this)
 
         // Verificar sesión
         if (!authRepository.isLoggedIn()) {
@@ -117,6 +127,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         // Configurar Navigation Drawer
         setupNavigationDrawer()
 
+        // ✅ NUEVO: Configurar panel de vehículo asignado
+        setupVehicleInfoPanel()
+
         // Cargar datos del usuario
         loadUserDataInDrawer()
 
@@ -127,6 +140,76 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+    }
+
+    /**
+     * Configura el panel inferior que muestra el vehículo asignado
+     * y permite cambiarlo (desasignar)
+     */
+    private fun setupVehicleInfoPanel() {
+        cvVehicleInfo = findViewById(R.id.cvVehicleInfo)
+        tvVehicleCode = findViewById(R.id.tvVehicleCode)
+        btnDetachVehicle = findViewById(R.id.btnDetachVehicle)
+
+        // Mostrar código del vehículo actual
+        val vehicleCode = authRepository.getVehicleCode() ?: "Sin vehículo"
+        tvVehicleCode.text = vehicleCode
+
+        // Configurar botón de cambiar/desasignar vehículo
+        btnDetachVehicle.setOnClickListener {
+            showDetachVehicleConfirmation()
+        }
+    }
+
+    /**
+     * Muestra confirmación antes de desasignar el vehículo
+     */
+    private fun showDetachVehicleConfirmation() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Cambiar vehículo")
+            .setMessage("¿Desea desasignar el vehículo actual y seleccionar otro?")
+            .setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton("Cambiar") { _, _ -> performDetachVehicle() }
+            .show()
+    }
+
+    /**
+     * Llama al backend para desasignar el vehículo y luego va a BusSelectionActivity
+     */
+    private fun performDetachVehicle() {
+        lifecycleScope.launch {
+            // Mostrar progreso
+            btnDetachVehicle.isEnabled = false
+            btnDetachVehicle.text = "..."
+
+            val result = busRepository.detachVehicle()
+
+            result.onSuccess { detachedId ->
+                android.util.Log.d("MainActivity", "✅ Vehículo desasignado: $detachedId")
+                Toast.makeText(this@MainActivity, "Vehículo desasignado", Toast.LENGTH_SHORT).show()
+
+                // Ir a selección de vehículo
+                val intent = Intent(this@MainActivity, BusSelectionActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                finish()
+
+            }.onFailure { exception ->
+                android.util.Log.e("MainActivity", "❌ Error al desasignar: ${exception.message}")
+
+                // ✅ Manejar sesión expirada
+                if (exception is SessionExpiredException) {
+                    Toast.makeText(this@MainActivity, "Sesión expirada", Toast.LENGTH_SHORT).show()
+                    goToLogin()
+                    return@onFailure
+                }
+
+                Toast.makeText(this@MainActivity, "Error: ${exception.message}", Toast.LENGTH_SHORT).show()
+                btnDetachVehicle.isEnabled = true
+                btnDetachVehicle.text = "Cambiar"
+            }
+        }
     }
 
     private fun setupToolbar() {
@@ -764,11 +847,53 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
     override fun onResume() {
         super.onResume()
+
+        // ✅ CRÍTICO: Validar sesión con el backend cuando vuelve del background
+        validateSessionOnResume()
+
         if (hasLocationPermissions() && ::locationCallback.isInitialized) {
             enableLocationTracking()
         }
         if (!isPollingOtherDrivers) {
             startPollingOtherDrivers()
+        }
+    }
+
+    /**
+     * Valida la sesión con el backend cuando la app vuelve del background.
+     * Si la sesión expiró (ej: corte desde admin), redirige a login.
+     */
+    private fun validateSessionOnResume() {
+        lifecycleScope.launch {
+            val result = authRepository.validateSessionWithBackend()
+
+            if (!result.isValid) {
+                // Sesión inválida - ir a login
+                android.util.Log.w("MainActivity", "Sesión inválida en onResume: ${result.reason}")
+                Toast.makeText(this@MainActivity, "Sesión expirada", Toast.LENGTH_SHORT).show()
+
+                // Detener servicio de telemetría
+                TelemetryService.stop(this@MainActivity)
+
+                goToLogin()
+                return@launch
+            }
+
+            // Si ya no tiene vehículo asignado (desasignado desde otro lado)
+            if (!result.hasVehicle) {
+                android.util.Log.w("MainActivity", "Sin vehículo asignado, ir a selección")
+                val intent = Intent(this@MainActivity, BusSelectionActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                finish()
+                return@launch
+            }
+
+            // Actualizar UI con datos del vehículo (por si cambió)
+            if (::tvVehicleCode.isInitialized) {
+                tvVehicleCode.text = authRepository.getVehicleCode() ?: "Sin vehículo"
+            }
         }
     }
 

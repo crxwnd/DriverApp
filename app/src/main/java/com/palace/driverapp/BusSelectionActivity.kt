@@ -19,6 +19,7 @@ import com.palace.driverapp.adapter.BusAdapter
 import com.palace.driverapp.network.models.Vehicle
 import com.palace.driverapp.repository.AuthRepository
 import com.palace.driverapp.repository.BusRepository
+import com.palace.driverapp.repository.SessionExpiredException
 import kotlinx.coroutines.launch
 
 class BusSelectionActivity : AppCompatActivity() {
@@ -130,28 +131,51 @@ class BusSelectionActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Llama al endpoint POST /api/driver/vehicle/attach para asignar el vehículo
+     */
     private fun selectBusAndContinue(vehicle: Vehicle) {
         showLoading(true)
 
         lifecycleScope.launch {
-            val result = busRepository.selectBus(vehicle.id)
+            val result = busRepository.attachVehicle(vehicle.id)
 
             showLoading(false)
 
             result.onSuccess {
+                // Guardar datos del vehículo localmente
                 authRepository.saveVehicleData(vehicle)
                 Toast.makeText(
                     this@BusSelectionActivity,
-                    "Vehículo ${vehicle.code} seleccionado",
+                    "Vehículo ${vehicle.code} asignado",
                     Toast.LENGTH_SHORT
                 ).show()
                 navigateToMainActivity()
             }.onFailure { exception ->
-                Toast.makeText(
-                    this@BusSelectionActivity,
-                    "Error: ${exception.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                android.util.Log.e("BusSelection", "❌ Error al asignar vehículo: ${exception.message}")
+
+                // ✅ Manejar sesión expirada
+                if (exception is SessionExpiredException) {
+                    Toast.makeText(this@BusSelectionActivity, "Sesión expirada", Toast.LENGTH_SHORT).show()
+                    goToLogin()
+                    return@onFailure
+                }
+
+                // Mostrar error específico según el tipo
+                val errorMessage = when {
+                    exception.message?.contains("no elegible") == true ->
+                        "Tu cuenta no puede asignar vehículos. Contacta al administrador."
+                    exception.message?.contains("no encontrado") == true ->
+                        "El vehículo ya no está disponible. Intenta con otro."
+                    exception.message?.contains("no disponible") == true ->
+                        "El vehículo está en mantenimiento o inactivo."
+                    else -> "Error: ${exception.message}"
+                }
+
+                Toast.makeText(this@BusSelectionActivity, errorMessage, Toast.LENGTH_LONG).show()
+
+                // Recargar la lista por si cambió la disponibilidad
+                loadBuses()
             }
         }
     }
